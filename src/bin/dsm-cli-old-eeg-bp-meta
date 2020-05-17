@@ -1,0 +1,102 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import glob
+import fileinput
+
+
+
+import socket
+import signal
+import time
+import sys
+import os
+import subprocess
+
+from colorama import Fore as fg, Back as bg, Style as st
+import argparse
+
+
+from pprint import pprint
+
+
+description = '''%(prog)s
+corrects ''' + fg.GREEN + 'DataFile' + st.RESET_ALL + ' and ' + fg.GREEN + 'MarkerFile' + st.RESET_ALL + ''' information in the
+''' + fg.MAGENTA + '\'*.vhdr\'' + st.RESET_ALL + ' and ' + fg.MAGENTA + '\'*.vmrk\'' + st.RESET_ALL + ''' files.
+
+'''
+epilog = 'Examples:\n\n''' + \
+    st.BRIGHT + os.path.basename(__file__) + st.RESET_ALL + ' --help\n' + \
+    st.BRIGHT + os.path.basename(__file__) + st.RESET_ALL + ' -h\n'
+
+
+par = argparse.ArgumentParser(
+    add_help=False,
+    prog=st.BRIGHT + os.path.basename(__file__) + st.RESET_ALL,
+    description=description,
+    formatter_class=argparse.RawDescriptionHelpFormatter,
+    # usage='%(prog)s [options]',
+    epilog=epilog,
+)
+par.add_argument(
+    'target',
+    action='store',
+    metavar="DIR_PATTERN",
+    help='directory structure pattern that at the deepest level contains EEG recordings (BP format: ' + fg.MAGENTA + '\'*.eeg\'' + st.RESET_ALL + ', ' + fg.MAGENTA + '\'*.vhdr\'' + st.RESET_ALL + ' and ' + fg.MAGENTA + '\'*.vmrk\'' + st.RESET_ALL + ' files). E.g., ' + fg.GREEN + './sub-*/ses-*/eeg/' + st.RESET_ALL + '.',
+)
+par.add_argument( # OK
+    "-w",
+    "--wet-run",
+    action="store_true",
+    dest="wet_run",
+    default=False,
+    help='opposite to dry-run. Changes to files will be made.',
+)
+par.add_argument( # OK
+    "-v",
+    "--verbose",
+    action="count",
+    dest="verbose",
+    default=0,
+    help='Verbose (use multiple times to increase verbbosity up to -vvvv).',
+)
+par.add_argument( # OK
+    '--version',
+    version='0.01',
+    action='version',)
+par.add_argument( # OK
+    '-h',
+    '--help',
+    action='help',
+    help='Show this help message and exit',
+)
+
+
+args = par.parse_args()
+
+target = os.path.relpath(args.target)
+target = os.path.join(target, '')
+
+fFiles_vhdr = glob.glob( target + '*.vhdr')
+fFiles_vmrk = glob.glob( target + '*.vmrk')
+
+print(fg.RED + os.path.join(os.getcwd(),'') + fg.MAGENTA + target + st.RESET_ALL )
+
+fFiles = fFiles_vhdr + fFiles_vmrk
+
+
+for fFile in fFiles:
+    fPath, fName = os.path.split(fFile)
+    fBase, fType = os.path.splitext(fName)
+    if args.wet_run:
+        print('  Processing: ' + fg.MAGENTA + fPath + ' '  + fg.GREEN + fName + ' ' + fg.RED + fBase + ' ' + fg.BLUE + fType + st.RESET_ALL)
+        for line in fileinput.FileInput(fFile, inplace=1):
+            if 'DataFile=' in line:
+                line = 'DataFile=' + fBase + '.eeg'
+                # line = 'DataFile=' + fBase[0:21] + '.eeg' # FIXME
+            elif 'MarkerFile=' in line:
+                line = 'MarkerFile=' + fBase + '.vmrk'
+                # line = 'MarkerFile=' + fBase[0:21] + '.vmrk' # FIXME
+            print(line.replace('\n',''))
+    else:
+        print('  Found: ' + fg.MAGENTA + fPath + ' ' + fg.GREEN + fName + ' ' + fg.RED + fBase + ' ' + fg.BLUE + fType + st.RESET_ALL)

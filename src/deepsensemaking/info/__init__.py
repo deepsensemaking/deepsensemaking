@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*
 
-"""testing module """
+"""deepsensemaking (dsm) info module"""
 
 info = "deepsensemaking"

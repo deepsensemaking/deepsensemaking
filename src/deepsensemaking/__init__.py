@@ -6,13 +6,12 @@ deepsensemaking (dsm)
 
 
 """
-
-from deepsensemaking.info import info
-
-
-
+from deepsensemaking._version import __version__
+from deepsensemaking import info
+from deepsensemaking import base
 
 
+from deepsensemaking.base import set_cwd, inside_emacs
 
 
 if __name__ == "__main__":

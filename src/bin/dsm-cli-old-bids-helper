@@ -1,0 +1,295 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+
+    #+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :tangle /ssh:cybercraft@158.75.106.224:/home/s4fp/cc-bids-mv.py
+
+"""TODO:
+- [x] Add option -M to move the dst to other directory (change location)
+- [x] glob item: pop + insert
+- [ ] ...
+
+- [ ] Add regexp + replace with default replace string = "" (consider groups capturing etc)
+
+"""
+
+import os
+import sys
+import pathlib
+import shutil
+import re
+
+from colorama import Fore as fg, Back as bg, Style as st
+
+import argparse
+
+from glob import glob
+
+description = """%(prog)s: """
+
+epilog = "Examples:  \n\n" + \
+    "./%(prog)s  \n" + \
+    "./%(prog)s -g \"./dicom_ex9/sub-*/ses-*/*/\"  \n" + \
+    "./%(prog)s -r \"^[0-9].*\"  \n" + \
+    "./%(prog)s -vvv  \n" + \
+    "./%(prog)s --help  \n"
+
+par = argparse.ArgumentParser(
+    add_help=False,
+    prog=st.BRIGHT + os.path.basename( sys.argv[0] ) + st.RESET_ALL,
+    description=description,
+    formatter_class=argparse.RawDescriptionHelpFormatter,
+    epilog=epilog,
+)
+par.add_argument(
+    "-g",
+    "--glob",
+    metavar="PATTERN",
+    dest="glob",
+    default="./dicom_ex9/sub-*/ses-*/*/",
+    help="glob... " + \
+    "The default is: " + fg.GREEN + "%(default)s" + st.RESET_ALL,
+)
+par.add_argument(
+    "-i",
+    "--item",
+    metavar="NUM",
+    dest="item",
+    type=int,
+    default=-1,
+    help="globbing item to act on... " + \
+    "The default is the " + fg.GREEN + "last" + st.RESET_ALL + " item...",
+)
+par.add_argument(
+    "-r",
+    "--regex",
+    metavar="REGEX",
+    dest="regex",
+    default=r".*",
+    help="regex... " + \
+    "The default is: " + fg.GREEN + "%(default)s" + st.RESET_ALL,
+)
+par.add_argument(
+    "--rem-pref",
+    "--rem-prefix",
+    "--remove-prefix",
+    "--del-pref",
+    "--del-prefix",
+    "--delete-prefix",
+    metavar="PREF",
+    dest="rem_pref",
+    default=None,
+    help="remove prefix... ",
+)
+par.add_argument(
+    "--rem-suff",
+    "--rem-suffix",
+    "--remove-suffix",
+    "--del-suff",
+    "--del-suffix",
+    "--delete-suffix",
+    metavar="PREF",
+    dest="rem_suff",
+    default=None,
+    help="remove suffix... ",
+)
+par.add_argument(
+    "--add-pref",
+    "--add-prefix",
+    metavar="PREF",
+    dest="add_pref",
+    default=None,
+    help="add prefix... ",
+)
+par.add_argument(
+    "--add-suff",
+    "--add-suffix",
+    metavar="PREF",
+    dest="add_suff",
+    default=None,
+    help="add suffix... ",
+)
+par.add_argument(
+    "--sub",
+    "--subst",
+    "--substitute",
+    metavar="PREF",
+    dest="subst",
+    default=None,
+    help="substitute... ",
+)
+par.add_argument( # OK
+    "-A",
+    "--act",
+    action="store_true",
+    dest="act",
+    default=False,
+    help="act... " + \
+    "The default is: " + fg.GREEN + "%(default)s" + st.RESET_ALL,
+)
+par.add_argument( # OK
+    "--ign",
+    "--ignore",
+    action="store_true",
+    dest="ign",
+    default=False,
+    help="ignore errors on prefix/suffix deletion... " + \
+    "The default is: " + fg.GREEN + "%(default)s" + st.RESET_ALL,
+)
+par.add_argument( # OK
+    "-v",
+    "--vrb",
+    "--verbose",
+    action="count",
+    dest="vrb",
+    default=0,
+    help="verbose (use multiple times to increase verbbosity, e.g., -vvv).",
+)
+par.add_argument( # OK
+    "-h",
+    "--help",
+    action="help",
+    help="show this help message and exit",
+)
+
+args = par.parse_args()
+
+
+args_check_mod = any( elem is not None for elem in [ args.add_pref, args.add_suff, args.rem_pref, args.rem_suff, args.subst, ] )
+
+
+def chop_pref( in_str, pref, errors=True, ):
+    if in_str.startswith(pref):
+        return in_str[len(pref):]
+    elif not errors:
+        return in_str
+    else:
+        raise ValueError("The {pref} is not a prefix of the input string {in_str} hence it cannot be chopped off.".format(in_str=repr(in_str), pref=repr(pref)))
+
+def chop_suff( in_str, suff , errors=True, ):
+    if in_str.endswith(suff):
+        return in_str[:-len(suff)]
+    elif not errors:
+        return in_str
+    else:
+        raise ValueError("The {suff} is not a suffix of the input string {in_str} hence it cannot be chopped off.".format(in_str=repr(in_str), pref=repr(suff)))
+
+def chop_both( in_str, pref, suff, errors=True):
+    in_str = chop_pref( in_str, pref, errors=errors, )
+    in_str = chop_suff( in_str, suff, errors=errors, )
+    return in_str
+
+src_lst = sorted( glob( args.glob ) )
+
+
+dd = len( str( len( src_lst ) + 1 ) ) + 1
+
+
+ii = 0
+
+for src_itm in src_lst:
+
+    src_splt_raw = src_itm.split( os.sep )
+
+    if len( src_splt_raw[-1] ) == 0:
+        src_splt_raw.pop()
+
+    src_text_raw = src_splt_raw[ args.item ]
+
+    src_splt_sty = [ elem for elem in src_splt_raw ]
+    src_splt_sty[ args.item ] = fg.GREEN + src_text_raw + st.RESET_ALL
+
+    src_join_raw = os.sep.join( src_splt_raw )
+    src_join_sty = os.sep.join( src_splt_sty )
+
+
+    dst_splt_raw = [ elem for elem in src_splt_raw ]
+    dst_text_raw = src_text_raw
+
+    matching = re.search( args.regex, src_text_raw )
+    if matching is not None:
+
+        ii = ii + 1
+
+        if args.rem_pref is not None:
+            dst_text_raw = chop_pref( dst_text_raw, args.rem_pref, not args.ign )
+
+        if args.rem_suff is not None:
+            dst_text_raw = chop_suff( dst_text_raw, args.rem_suff, not args.ign )
+
+        if args.add_pref is not None:
+            dst_text_raw = args.add_pref + dst_text_raw
+
+        if args.add_suff is not None:
+            dst_text_raw = dst_text_raw + args.add_suff
+
+        if args.subst is not None:
+            dst_text_raw = args.subst
+
+        dst_splt_raw[ args.item ] = dst_text_raw
+
+        dst_splt_sty = [ elem for elem in dst_splt_raw ]
+        dst_splt_sty[ args.item ] = fg.GREEN + dst_text_raw + st.RESET_ALL
+
+        dst_join_raw = os.sep.join( dst_splt_raw )
+        dst_join_sty = os.sep.join( dst_splt_sty )
+
+        dst_para_dir = os.sep.join( dst_splt_raw[ :-1 ] )
+
+
+        if args.vrb >= 1 or args_check_mod:
+            print( "="*75 )
+
+        print( "{1:0{0}}:".format(dd, ii) + " src_join_sty: " + src_join_sty )
+
+        if args.vrb >= 1 or args_check_mod:
+            print( "{1:0{0}}:".format(dd, ii) + " dst_join_sty: " + dst_join_sty )
+
+        if args.vrb >= 1:
+            print( "-"*75 )
+            print( "{1:0{0}}:".format(dd, ii) + " dst_para_dir: " + dst_para_dir )
+
+        if args.vrb >= 2:
+            print( "-"*75 )
+            print( "{1:0{0}}:".format(dd, ii) + " src_text_raw: " + str( src_text_raw ) )
+            print( "{1:0{0}}:".format(dd, ii) + " dst_text_raw: " + str( dst_text_raw ) )
+
+        if args.vrb >= 3:
+            print( "-"*75 )
+            print( "{1:0{0}}:".format(dd, ii) + " src_splt_raw: " + str( src_splt_raw ) )
+            print( "{1:0{0}}:".format(dd, ii) + " dst_splt_raw: " + str( dst_splt_raw ) )
+
+        if args.act:
+            os.makedirs( dst_para_dir, mode=0o700, exist_ok=True, )
+            shutil.move( src_join_raw, dst_join_raw )
+            print( "-"*75 )
+            print( fg.GREEN + "DONE!" + st.RESET_ALL )
+
+
+if args.vrb >= 0: # TODO Change to 1 later
+
+    # if ( not args_check_mod ) and args.vrb == 0:
+    #     print( "="*75 )
+
+    print( "="*75 )
+    print( "The following arguments were used: ")
+    print( "-"*75 )
+    print( "      --glob " + str( args.glob.__repr__()     ) )
+    print( "      --item " + str( args.item.__repr__()     ) )
+    print( "     --regex " + str( args.regex.__repr__()    ) )
+    print( "  --rem-pref " + str( args.rem_pref.__repr__() ) )
+    print( "  --rem-suff " + str( args.rem_suff.__repr__() ) )
+    print( "  --add-pref " + str( args.add_pref.__repr__() ) )
+    print( "  --add-suff " + str( args.add_suff.__repr__() ) )
+    print( "     --subst " + str( args.subst.__repr__()    ) )
+    print( "       --act " + str( args.act.__repr__()      ) )
+    print( "       --ign " + str( args.ign.__repr__()      ) )
+    print( "       --vrb " + str( args.vrb.__repr__()      ) )
+
+if args.vrb >= 4:
+    print( "-"*75 )
+    print( "Is any of the path modifying arguments not None: " + str( args_check_mod ) )
+
+if args.vrb >= 5:
+    print( "-"*75 )
+    print( "Args: " + str( args ) )

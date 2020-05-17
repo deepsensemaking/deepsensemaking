@@ -1,1 +1,5 @@
-deepsensemaking-cli.py
+#!/usr/bin/env python
+# -*- coding: utf-8 -*
+
+print("d e e p s e n s e m a k i n g")
+print("try: dsm-cli-")
