@@ -22,7 +22,7 @@ setup(
     ),
     python_requires  = ">=3.6",
     url              = "https://github.com/deepsensemaking/deepsensemaking",
-    download_url     = "https://github.com/deepsensemaking/deepsensemaking/releases/download/v0.1.2020.05.17.1/deepsensemaking-0.1.2020.5.17.1-py3-none-any.whl",
+    download_url     = "https://github.com/deepsensemaking/deepsensemaking/releases/download/0.1.2020.5.17.1/deepsensemaking-0.1.2020.5.17.1-py3-none-any.whl",
     description      = "deepsensemaking (dsm)",
     long_description = long_description,
     long_description_content_type = "text/markdown",
