@@ -25,7 +25,7 @@ with open( ver_file, "r", ) as fh:
 
 setup(
     name             = "deepsensemaking",
-    version          = "0.1.2020.5.17.2",
+    version          = ver_str,
     package_dir      = {"": "src"},
     packages         = find_namespace_packages(
         where            = "src",

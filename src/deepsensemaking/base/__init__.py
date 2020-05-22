@@ -13,12 +13,14 @@ conHnd = logging.StreamHandler()
 conHnd.setLevel(logging.DEBUG)
 conHnd.setFormatter(
     logging.Formatter(
-        " - ".join([
+        ": ".join([
             # "%(asctime)s",
-            "%(name)s",
+            # "%(name)s",
             "%(levelname)s",
             "%(message)s",
-        ])))
+        ]),
+        datefmt="[%Y-%m-%d %H:%M:%S]",
+    ))
 
 # Remove all handlers associated to a logger
 # NB: This alleviates problems that result from
