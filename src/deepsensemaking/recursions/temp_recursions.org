@@ -1,0 +1,70 @@
+
+
+- https://stackoverflow.com/questions/6027558/flatten-nested-dictionaries-compressing-keys/41689055#41689055
+- https://stackoverflow.com/questions/6027558/flatten-nested-dictionaries-compressing-keys
+
+
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle yes
+
+def cumsum(acum_num, curr_iter, max_iter=11, verbose=0,):
+    if verbose >= 2:
+        print(
+            " ".join(
+                [
+                    "{:>{}d}".format( acum_num, 5 ),
+                    "{:>{}d}".format( curr_iter, 5 ),
+                    "{:>{}d}".format( max_iter, 5 ),
+                ]
+            )
+        )
+
+    # Base case
+    # Return the final state
+    if curr_iter == max_iter:
+        return acum_num
+
+    # Recursive case
+    # Thread the state through the recursive call
+    else:
+        return cumsum(acum_num + curr_iter, curr_iter + 1,  max_iter=max_iter, verbose=verbose, )
+
+#+END_SRC
+
+#+RESULTS:
+:results:
+# Out[46]:
+:end:
+
+
+
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle yes
+
+cumsum(0, 0, max_iter=12, verbose=2,)
+
+
+
+#+END_SRC
+
+#+RESULTS:
+:results:
+# Out[47]:
+# output
+:     0     0    12
+:     0     1    12
+:     1     2    12
+:     3     3    12
+:     6     4    12
+:    10     5    12
+:    15     6    12
+:    21     7    12
+:    28     8    12
+:    36     9    12
+:    45    10    12
+:    55    11    12
+:    66    12    12
+:
+# text/plain
+: 66
+:end:
+
+

@@ -3,150 +3,113 @@
 
 """deepsensemaking (dsm) dict sub-module"""
 
-
 import types
 import functools
 import numpy as np
 import re
 import datetime as dt
+import pandas as pd
 from functools import reduce
+from pprint import pprint as pp
+import deepsensemaking as dsm
 
-def gen_dict( in_dict, pre=None, ):
+samp_dict = {}
+samp_dict[1] = 1.1
+samp_dict["a1"] = "A1"
+samp_dict["a2"] = {}
+samp_dict["a2"]["b1"] = "A2-B1"
+samp_dict["a2"]["b2"] = None
+samp_dict["a2"]["b3"] = len
+samp_dict["a2"]["b4"] = pd.DataFrame()
+samp_dict["a2"]["b5"] = np.eye(3)
+samp_dict["a2"]["b6"] = dt.date(2020,1,1)
+samp_dict["a2"]["b7"] = "aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee"
+samp_dict["a2"]["b8"] = list(range(5))
+# samp_dict["a2"]["b9"] = list(range(120))
+samp_dict["a3"] = {}
+samp_dict["a3"]["b1"] = range(120)
+samp_dict["a3"]["b2"] = set(range(5))
+samp_dict["a4"] = {}
+samp_dict["a4"]["b1"] = {}
+samp_dict["a4"]["b1"]["c1"] = {}
+samp_dict["a4"]["b1"]["c1"]["d1"] = "A3-B1-C1-D1"
+samp_dict
+
+def red_dict(in_dict,max_level=None,):
     """
     Example usage:
+    ==============
+    from deepsensemaking.dict import samp_dict
+    from deepsensemaking.dict import red_dict
+    print(red_dict(in_dict=samp_dict,max_level=1,))
 
-        di_samp = {}
-        di_samp["a1"] = ["A1"]
-        di_samp["a2"] = {}
-        di_samp["a2"]["b2"] = "A2-B2"
-        di_samp["a3"] = {}
-        di_samp["a3"]["b3"] = {}
-        di_samp["a3"]["b3"]["c3"] = "A3-B3-C3"
-        di_samp["a4"] = {}
-        di_samp["a4"]["b4"] = {}
-        di_samp["a4"]["b4"]["c4"] = {}
-        di_samp["a4"]["b4"]["c4"]["d4"] = "A4-B4-C4-D4"
-
-        print( "="*75 )
-        print( di_samp )
-        print( "-"*75 )
-
-        print( "="*75 )
-
-        from pprint import pprint as pp
-
-        pp( list( gen_dict( in_dict=di_samp, pre=None, ) ) )
-
-        # See: https://stackoverflow.com/questions/12507206/
     """
-    pre = pre[:] if pre else []
-    if isinstance(in_dict, dict):
-        for key, value in in_dict.items():
-            if isinstance(value, dict):
-                for d in gen_dict(value, pre + [key]):
-                    yield d
+    reducer_seed = tuple()
+    def impl(in_dict, pref, level):
+        def reducer_func(x, y): return (*x, y)
+        def flatten_func(new_in_dict, kv):
+            return \
+                (max_level is None or level < max_level) \
+                and isinstance(kv[1], dict) \
+                and {**new_in_dict, **impl(kv[1], reducer_func(pref, kv[0]), level + 1)} \
+                or {**new_in_dict, reducer_func(pref, kv[0]): kv[1]}
+        return reduce(
+            flatten_func,
+            in_dict.items(),
+            {}
+        )
 
-            else:
-                yield pre + [key, value]
-
-    else:
-        yield in_dict
+    return impl(in_dict, reducer_seed, 0)
 
 
 
-
-
-
-def dict_str( in_dict, name="dict"):
+def str_dict(in_dict,name="in_dict",max_level=1,disp_vals=True,max_len=40,):
     """
     Example usage:
-
-        import pandas as pd
-        import re
-
-        di_samp = {}
-        di_samp["a1"]  = ["A1",1000]
-        di_samp["b1"] = {}
-        di_samp["b1"]["b2"] = "B1-B2"
-        di_samp["c1"] = {}
-        di_samp["c1"]["c2"] = {}
-        di_samp["c1"]["c2"]["c3"] = "C1-C2-C3"
-        di_samp["d1"] = {}
-        di_samp["d1"]["d2"] = {}
-        di_samp["d1"]["d2"]["d3"] = {}
-        di_samp["d1"]["d2"]["d3"]["d4"] = "D1-D2-D3-D4"
-        di_samp["e1"] = 7
-        di_samp["f1"] = [1,2,3,4,"5","6","7",8,9,10,11,12,13,14,15]
-        di_samp["g1"] = pd.DataFrame({"ok": [ 1, 2, 3, ]})
-        di_samp["h1"] = np.array([[1,2,3,4]])
-        di_samp["k1"] = re.compile(r"\bwow\b")
-
-        print( "="*75 )
-        print( di_samp )
-        print( "-"*75 )
-
-        print( "="*75 )
-
-        from
-
-        dictStringer( in_dict=di_samp, name="di_samp")
-
-    ', '.join(str(x) for x in list_of_ints)
+    ==============
+    from deepsensemaking.dict import samp_dict
+    from deepsensemaking.dict import red_dict
+    print(str_dict(in_dict=samp_dict,max_level=1,))
 
     """
-
+    repr_func = lambda item: "\""+item+"\"" if isinstance(item, ( str, ) ) else str(item)
     out_str = ""
-
-    for item in gen_dict( in_dict ):
-        if isinstance(item[-1], ( list, tuple, set ) ):
-            if len( item[-1] ) <= 12:
-                # print("list:short")
-                # print( name + "[\"" + "\"][\"" .join( item[:-1] ) + "\"]" + " = " + "[ " + ", ".join( map( str, item[-1] ) ) + " ]" )
-                new_str = name + "[" + "][".join( "\""+str(x)+"\"" if isinstance(x, ( str, ) ) else str(x) for x in item[:-1] ) + "]" + " = " + str(item[-1])
-                out_str = out_str + new_str + "\n"
+    for key,val in red_dict(in_dict,max_level=max_level,).items():
+        out_str += name if name else ""
+        out_str += "["
+        out_str += "][".join( repr_func(item) for item in key )
+        out_str += "]"
+        if disp_vals:
+            out_str += " = "
+            # out_str += str(val)
+            val_str = "<???>"
+            if isinstance(val,(list,tuple,set,str,int,float,complex,re.Pattern,)):
+                val_str = str(val)
+                if len(val_str) > max_len:
+                    val_str = val_str[:40] + " + [ ... ] # trimmed val..."
+            elif val is None:
+                val_str = str(val) + " #<" + str(type(val).__name__) + ">"
+            elif isinstance(val,(types.FunctionType,types.BuiltinFunctionType,functools.partial,)):
+                val_str = "<" + str( type( val).__name__ ) + ":" + str(val.__name__) + ">"
+            elif isinstance(val, (np.ndarray, np.generic,) ):
+                val_str = "<" + str( type( val).__name__ ) + "> # shape: " + str(val.shape)
+            elif isinstance(val, (dt.date,dt.time,dt.datetime,) ):
+                val_str = val.__repr__() + " # <" + str( type( val).__name__ ) + ">"
             else:
-                # print("list:long")
-                # print( name + "[\"" + "\"][\"" .join( item[:-1] ) + "\"]" + " = " + "[ " + ", ".join( map( str, item[-1][0:12] ) ) + "... ]" )
-                new_str = name + "[" + "][".join( "\""+str(x)+"\"" if isinstance(x, ( str, ) ) else str(x) for x in item[:-1] ) + "]" + " = " + str(item[-1][0:12]) + " + [ ... ] #sequence was trimmed..."
-                out_str = out_str + new_str + "\n"
-        elif isinstance(item[-1], ( str, ) ):
-            # print("str,")
-            new_str = name + "[" + "][".join( "\""+str(x)+"\"" if isinstance(x, ( str, ) ) else str(x) for x in item[:-1] ) + "]" + " = " + "\"" + str(item[-1]) + "\""
-            out_str = out_str + new_str + "\n"
-        elif isinstance(item[-1], ( re.Pattern, ) ):
-            # print("re.Pattern,")
-            new_str = name + "[" + "][".join( "\""+str(x)+"\"" if isinstance(x, ( str, ) ) else str(x) for x in item[:-1] ) + "]" + " = " + "\"" + str(item[-1]) + "\""
-            out_str = out_str + new_str + "\n"
-        elif isinstance(item[-1], ( types.FunctionType, types.BuiltinFunctionType, functools.partial, ) ):
-            # print("str,")
-            new_str = name + "[" + "][".join( "\""+str(x)+"\"" if isinstance(x, ( str, ) ) else str(x) for x in item[:-1] ) + "]" + " = " + "<" + str( type( item[-1]).__name__ ) + ":" + str(item[-1].__name__) + ">"
-            out_str = out_str + new_str + "\n"
-        elif isinstance(item[-1], (int, float, complex, ) ):
-            # print("int, float, complex,")
-            new_str = name + "[" + "][".join( "\""+str(x)+"\"" if isinstance(x, ( str, ) ) else str(x) for x in item[:-1] ) + "]" + " = " + str(item[-1])
-            out_str = out_str + new_str + "\n"
-        elif isinstance(item[-1], (np.ndarray, np.generic,) ):
-            # print("numpy array")
-            new_str = name + "[" + "][".join( "\""+str(x)+"\"" if isinstance(x, ( str, ) ) else str(x) for x in item[:-1] ) + "]" + " = <" + str( type( item[-1]).__name__ ) + "> #shape: " + str(item[-1].shape)
-            out_str = out_str + new_str + "\n"
-        elif isinstance(item[-1], (dt.date,) ):
-            new_str = name + "[" + "][".join( "\""+str(x)+"\"" if isinstance(x, ( str, ) ) else str(x) for x in item[:-1] ) + "]" + " = " + item[-1].__repr__() + " #<" + str( type( item[-1]).__name__ ) + ">"
-            out_str = out_str + new_str + "\n"
+                val_str = "<" + str( type( val).__name__ ) + ">"
+            out_str += val_str
 
-
-
-
-        elif item[-1] is None:
-            new_str = name + "[" + "][".join( "\""+str(x)+"\"" if isinstance(x, ( str, ) ) else str(x) for x in item[:-1] ) + "]" + " = " + str(item[-1]) + " #<" + str( type( item[-1]).__name__ ) + ">"
-            out_str = out_str + new_str + "\n"
-        else:
-            # print("other")
-            new_str = name + "[" + "][".join( "\""+str(x)+"\"" if isinstance(x, ( str, ) ) else str(x) for x in item[:-1] ) + "]" + " = <" + str( type( item[-1]).__name__ ) + ">"
-            out_str = out_str + new_str + "\n"
-
+        out_str += "\n"
     return out_str
 
 
+def print_dict(in_dict,name="in_dict",max_level=1,disp_vals=True):
+    """
+    Example usage:
+    ==============
+    from deepsensemaking.dict import samp_dict
+    from deepsensemaking.dict import red_dict
+    print_dict(in_dict=samp_dict,max_level=1,)
 
-def dict_print(in_dict,name="dict"):
-    print(dict_str(in_dict,name=name))
+    """
+    print(str_dict(in_dict,name=name,max_level=max_level,disp_vals=disp_vals))
