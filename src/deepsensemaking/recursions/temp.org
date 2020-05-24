@@ -1,0 +1,447 @@
+
+
+
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle yes
+
+def cumsum(acum_num, curr_iter, max_iter=11, verbose=0,):
+    if verbose >= 2:
+        print(
+            " ".join(
+                [
+                    "{:>{}d}".format( acum_num, 5 ),
+                    "{:>{}d}".format( curr_iter, 5 ),
+                    "{:>{}d}".format( max_iter, 5 ),
+                ]
+            )
+        )
+
+    # Base case
+    # Return the final state
+    if curr_iter == max_iter:
+        return acum_num
+
+    # Recursive case
+    # Thread the state through the recursive call
+    else:
+        return cumsum(acum_num + curr_iter, curr_iter + 1,  max_iter=max_iter, verbose=verbose, )
+
+#+END_SRC
+
+#+RESULTS:
+:results:
+# Out[46]:
+:end:
+
+
+
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle yes
+
+cumsum(0, 0, max_iter=12, verbose=2,)
+
+
+
+#+END_SRC
+
+#+RESULTS:
+:results:
+# Out[47]:
+# output
+:     0     0    12
+:     0     1    12
+:     1     2    12
+:     3     3    12
+:     6     4    12
+:    10     5    12
+:    15     6    12
+:    21     7    12
+:    28     8    12
+:    36     9    12
+:    45    10    12
+:    55    11    12
+:    66    12    12
+:
+# text/plain
+: 66
+:end:
+
+
+
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle yes
+from pprint import pprint as pp
+import deepsensemaking as dsm
+from deepsensemaking.dicts import gen_dict
+
+def gen_dict2(indict, pre=None,max_depth=2,curr_depth=0):
+    pre = pre[:] if pre else []
+    if isinstance(indict, dict):
+        for key, value in indict.items():
+            if curr_depth > max_depth:
+                if isinstance(value, dict):
+                    for d in gen_dict2(value, pre + [key],max_depth=max_depth,curr_depth=curr_depth+1,):
+                        yield d
+
+                else:
+                    yield pre + [key, value]
+
+            else:
+                yield indict
+
+    else:
+        yield indict
+
+
+
+di_samp = {}
+di_samp["a1"] = ["A1"]
+di_samp["a2"] = {}
+di_samp["a2"]["b1"] = "A2-B1"
+di_samp["a2"]["b2"] = "A2-B2"
+di_samp["a3"] = {}
+di_samp["a3"]["b1"] = {}
+di_samp["a3"]["b1"]["c1"] = "A3-B1-C1"
+
+
+pp(di_samp)
+
+pp(list(gen_dict(indict=di_samp,pre=None,)))
+pp(list(gen_dict2(indict=di_samp,pre=None,max_depth=5,curr_depth=0)))
+
+#+END_SRC
+
+#+RESULTS:
+:results:
+# Out[44]:
+# output
+: {'a1': ['A1'],
+:  'a2': {'b1': 'A2-B1', 'b2': 'A2-B2'},
+:  'a3': {'b1': {'c1': 'A3-B1-C1'}}}
+: [['a1', ['A1']],
+:  ['a2', 'b1', 'A2-B1'],
+:  ['a2', 'b2', 'A2-B2'],
+:  ['a3', 'b1', 'c1', 'A3-B1-C1']]
+: [{'a1': ['A1'],
+:   'a2': {'b1': 'A2-B1', 'b2': 'A2-B2'},
+:   'a3': {'b1': {'c1': 'A3-B1-C1'}}},
+:  {'a1': ['A1'],
+:   'a2': {'b1': 'A2-B1', 'b2': 'A2-B2'},
+:   'a3': {'b1': {'c1': 'A3-B1-C1'}}},
+:  {'a1': ['A1'],
+:   'a2': {'b1': 'A2-B1', 'b2': 'A2-B2'},
+:   'a3': {'b1': {'c1': 'A3-B1-C1'}}}]
+:
+:end:
+
+
+
+- https://stackoverflow.com/questions/6027558/flatten-nested-dictionaries-compressing-keys/41689055#41689055
+- https://stackoverflow.com/questions/6027558/flatten-nested-dictionaries-compressing-keys
+
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle ye
+from functools import reduce
+
+def flatten(d, max_level=None, ):
+    reducer_seed = tuple()
+    reducer_func = lambda x, y: (*x, y)
+    def impl(d, pref, level):
+        return reduce(
+            lambda new_d, kv:
+            (max_level is None or level < max_level)
+            and isinstance(kv[1], dict)
+            and {**new_d, **impl(kv[1], reducer_func(pref, kv[0]), level + 1)}
+            or {**new_d, reducer_func(pref, kv[0]): kv[1]},
+            d.items(),
+            {}
+        )
+
+    return impl(d, reducer_seed, 0)
+
+pp(flatten(di_samp,max_level=1,))
+
+#+END_SRC
+
+#+RESULTS:
+:results:
+# Out[82]:
+# output
+: {('a1',): ['A1'],
+:  ('a2', 'b1'): 'A2-B1',
+:  ('a2', 'b2'): 'A2-B2',
+:  ('a3', 'b1'): {'c1': 'A3-B1-C1'}}
+:
+:end:
+
+
+
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle yes
+
+
+from functools import reduce
+
+
+def _reducer(items, key, val, pref):
+    if isinstance(val, dict):
+        return {**items, **flatten(val, pref + key)}
+    else:
+        return {**items, pref + key: val}
+
+def flatten(d, pref=''):
+    return(reduce(
+        lambda new_d, kv: _reducer(new_d, *kv, pref),
+        d.items(),
+        {}
+    ))
+
+
+print(flatten(di_samp))
+
+#+END_SRC
+
+#+RESULTS:
+:results:
+# Out[54]:
+# output
+: {'a1': ['A1'], 'a2b1': 'A2-B1', 'a2b2': 'A2-B2', 'a3b1c1': 'A3-B1-C1'}
+:
+:end:
+
+
+
+
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle ye
+from functools import reduce
+
+def flatten(d, max_level=None, ):
+    reducer_seed = tuple()
+    reducer_func = lambda x, y: (*x, y)
+    def impl(d, pref, level):
+        return reduce(
+            lambda new_d, kv:
+            (max_level is None or level < max_level)
+            and isinstance(kv[1], dict)
+            and {**new_d, **impl(kv[1], reducer_func(pref, kv[0]), level + 1)}
+            or {**new_d, reducer_func(pref, kv[0]): kv[1]},
+            d.items(),
+            {}
+        )
+
+    return impl(d, reducer_seed, 0)
+
+pp(flatten(di_samp,max_level=1,))
+
+#+END_SRC
+
+#+RESULTS:
+:results:
+# Out[83]:
+# output
+: {('a1',): ['A1'],
+:  ('a2', 'b1'): 'A2-B1',
+:  ('a2', 'b2'): 'A2-B2',
+:  ('a3', 'b1'): {'c1': 'A3-B1-C1'}}
+:
+:end:
+
+
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle ye
+from functools import reduce
+
+def flatten(d, max_level=None, ):
+    reducer_seed = tuple()
+    def impl(d, pref, level):
+        # reducer_func = lambda x, y: (*x, y)
+        def reducer_func(x, y):
+            return (*x, y)
+        # flatten_func = lambda new_d, kv: (max_level is None or level < max_level) and isinstance(kv[1], dict) and {**new_d, **impl(kv[1], reducer_func(pref, kv[0]), level + 1)} or {**new_d, reducer_func(pref, kv[0]): kv[1]}
+        def flatten_func(new_d, kv):
+            return \
+                (max_level is None or level < max_level) \
+                and isinstance(kv[1], dict) \
+                and {**new_d, **impl(kv[1], reducer_func(pref, kv[0]), level + 1)} \
+                or {**new_d, reducer_func(pref, kv[0]): kv[1]}
+        return reduce(
+            flatten_func,
+            d.items(),
+            {}
+        )
+
+    return impl(d, reducer_seed, 0)
+
+pp(flatten(di_samp,max_level=1,))
+
+#+END_SRC
+
+#+RESULTS:
+:results:
+# Out[107]:
+# output
+: {('a1',): ['A1'],
+:  ('a2', 'b1'): 'A2-B1',
+:  ('a2', 'b2'): 'A2-B2',
+:  ('a3', 'b1'): {'c1': 'A3-B1-C1'}}
+:
+:end:
+
+
+
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle yes
+#+END_SRC
+
+#+RESULTS:
+:results:
+# Out[209]:
+# text/plain
+: {1: ['A1'],
+:  'a2': {'b1': 'A2-B1', 'b2': None, 'b3': <function len(obj, /)>},
+:  'a3': {'b1': {'c1': 'aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee'}}}
+:end:
+
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle ye
+import types
+import functools
+import numpy as np
+import re
+import datetime as dt
+import pandas as pd
+from functools import reduce
+from pprint import pprint as pp
+import deepsensemaking as dsm
+
+samp_dict = {}
+samp_dict[1] = 1.1
+samp_dict["a1"] = "A1"
+samp_dict["a2"] = {}
+samp_dict["a2"]["b1"] = "A2-B1"
+samp_dict["a2"]["b2"] = None
+samp_dict["a2"]["b3"] = len
+samp_dict["a2"]["b4"] = pd.DataFrame()
+samp_dict["a2"]["b5"] = np.eye(3)
+samp_dict["a2"]["b6"] = dt.date(2020,1,1)
+samp_dict["a2"]["b7"] = "aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee"
+samp_dict["a2"]["b8"] = list(range(5))
+# samp_dict["a2"]["b9"] = list(range(120))
+samp_dict["a3"] = {}
+samp_dict["a3"]["b1"] = range(120)
+samp_dict["a3"]["b2"] = set(range(5))
+samp_dict["a4"] = {}
+samp_dict["a4"]["b1"] = {}
+samp_dict["a4"]["b1"]["c1"] = {}
+samp_dict["a4"]["b1"]["c1"]["d1"] = "A3-B1-C1-D1"
+samp_dict
+
+def red_dict(in_dict,max_level=None,):
+    reducer_seed = tuple()
+    def impl(in_dict, pref, level):
+        def reducer_func(x, y): return (*x, y)
+        def flatten_func(new_in_dict, kv):
+            return \
+                (max_level is None or level < max_level) \
+                and isinstance(kv[1], dict) \
+                and {**new_in_dict, **impl(kv[1], reducer_func(pref, kv[0]), level + 1)} \
+                or {**new_in_dict, reducer_func(pref, kv[0]): kv[1]}
+        return reduce(
+            flatten_func,
+            in_dict.items(),
+            {}
+        )
+
+    return impl(in_dict, reducer_seed, 0)
+
+pp(red_dict(in_dict=samp_dict,max_level=0,))
+
+#+END_SRC
+
+#+RESULTS:
+:results:
+# Out[16]:
+# output
+: {(1,): 1.1,
+:  ('a1',): 'A1',
+:  ('a2',): {'b1': 'A2-B1',
+:            'b2': None,
+:            'b3': <built-in function len>,
+:            'b4': Empty DataFrame
+: Columns: []
+: Index: [],
+:            'b5': array([[1., 0., 0.],
+:        [0., 1., 0.],
+:        [0., 0., 1.]]),
+:            'b6': datetime.date(2020, 1, 1),
+:            'b7': 'aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee',
+:            'b8': [0, 1, 2, 3, 4]},
+:  ('a3',): {'b1': range(0, 120), 'b2': {0, 1, 2, 3, 4}},
+:  ('a4',): {'b1': {'c1': {'d1': 'A3-B1-C1-D1'}}}}
+:
+:end:
+
+
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle yes
+
+def str_dict(in_dict,name="in_dict",max_level=1,disp_vals=True,max_len=40,):
+    repr_func = lambda item: "\""+item+"\"" if isinstance(item, ( str, ) ) else str(item)
+    out_str = ""
+    for key,val in red_dict(in_dict,max_level=max_level,).items():
+        out_str += name if name else ""
+        out_str += "["
+        out_str += "][".join( repr_func(item) for item in key )
+        out_str += "]"
+        if disp_vals:
+            out_str += " = "
+            # out_str += str(val)
+            val_str = "<???>"
+            if isinstance(val,(list,tuple,set,str,int,float,complex,re.Pattern,)):
+                val_str = str(val)
+                if len(val_str) > max_len:
+                    val_str = val_str[:40] + " + [ ... ] # trimmed val..."
+            elif val is None:
+                val_str = str(val) + " #<" + str(type(val).__name__) + ">"
+            elif isinstance(val,(types.FunctionType,types.BuiltinFunctionType,functools.partial,)):
+                val_str = "<" + str( type( val).__name__ ) + ":" + str(val.__name__) + ">"
+            elif isinstance(val, (np.ndarray, np.generic,) ):
+                val_str = "<" + str( type( val).__name__ ) + "> # shape: " + str(val.shape)
+            elif isinstance(val, (dt.date,dt.time,dt.datetime,) ):
+                val_str = val.__repr__() + " # <" + str( type( val).__name__ ) + ">"
+            else:
+                val_str = "<" + str( type( val).__name__ ) + ">"
+            out_str += val_str
+
+        out_str += "\n"
+    return out_str
+
+
+def print_dict(in_dict,name="in_dict",max_level=1,disp_vals=True):
+    print(str_dict(in_dict,name=name,max_level=max_level,disp_vals=disp_vals))
+
+
+print_dict(in_dict=samp_dict,name="in_dict",max_level=1,disp_vals=True)
+
+#+END_SRC
+
+#+RESULTS:
+:results:
+# Out[17]:
+# output
+: in_dict[1] = 1.1
+: in_dict["a1"] = A1
+: in_dict["a2"]["b1"] = A2-B1
+: in_dict["a2"]["b2"] = None #<NoneType>
+: in_dict["a2"]["b3"] = <builtin_function_or_method:len>
+: in_dict["a2"]["b4"] = <DataFrame>
+: in_dict["a2"]["b5"] = <ndarray> # shape: (3, 3)
+: in_dict["a2"]["b6"] = datetime.date(2020, 1, 1) # <date>
+: in_dict["a2"]["b7"] = aaaaaaaaaabbbbbbbbbbccccccccccdddddddddd + [ ... ] # trimmed val...
+: in_dict["a2"]["b8"] = [0, 1, 2, 3, 4]
+: in_dict["a3"]["b1"] = <range>
+: in_dict["a3"]["b2"] = {0, 1, 2, 3, 4}
+: in_dict["a4"]["b1"] = <dict>
+:
+:
+:end:
+
+
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle yes
+#+END_SRC
+
+#+RESULTS:
+:results:
+# Out[4]:
+:end:

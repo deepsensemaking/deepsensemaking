@@ -9,8 +9,9 @@ import functools
 import numpy as np
 import re
 import datetime as dt
+from functools import reduce
 
-def gen_dict( indict, pre=None, ):
+def gen_dict( in_dict, pre=None, ):
     """
     Example usage:
 
@@ -34,13 +35,13 @@ def gen_dict( indict, pre=None, ):
 
         from pprint import pprint as pp
 
-        pp( list( gen_dict( indict=di_samp, pre=None, ) ) )
+        pp( list( gen_dict( in_dict=di_samp, pre=None, ) ) )
 
         # See: https://stackoverflow.com/questions/12507206/
     """
     pre = pre[:] if pre else []
-    if isinstance(indict, dict):
-        for key, value in indict.items():
+    if isinstance(in_dict, dict):
+        for key, value in in_dict.items():
             if isinstance(value, dict):
                 for d in gen_dict(value, pre + [key]):
                     yield d
@@ -49,14 +50,14 @@ def gen_dict( indict, pre=None, ):
                 yield pre + [key, value]
 
     else:
-        yield indict
+        yield in_dict
 
 
 
 
 
 
-def dict_str( indict, name="dict"):
+def dict_str( in_dict, name="dict"):
     """
     Example usage:
 
@@ -88,7 +89,7 @@ def dict_str( indict, name="dict"):
 
         from
 
-        dictStringer( indict=di_samp, name="di_samp")
+        dictStringer( in_dict=di_samp, name="di_samp")
 
     ', '.join(str(x) for x in list_of_ints)
 
@@ -96,7 +97,7 @@ def dict_str( indict, name="dict"):
 
     out_str = ""
 
-    for item in gen_dict( indict ):
+    for item in gen_dict( in_dict ):
         if isinstance(item[-1], ( list, tuple, set ) ):
             if len( item[-1] ) <= 12:
                 # print("list:short")
@@ -147,5 +148,5 @@ def dict_str( indict, name="dict"):
 
 
 
-def dict_print(indict,name="dict"):
-    print(dict_str(indict,name=name))
+def dict_print(in_dict,name="dict"):
+    print(dict_str(in_dict,name=name))

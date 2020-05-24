@@ -7,6 +7,7 @@ deepsensemaking (dsm)
 
 """
 from deepsensemaking._version import __version__
+
 from deepsensemaking import info
 from deepsensemaking import base
 from deepsensemaking import dicts

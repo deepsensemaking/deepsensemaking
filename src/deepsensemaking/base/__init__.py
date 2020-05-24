@@ -33,6 +33,15 @@ for handler in logger.handlers[:]:
 logger.addHandler(conHnd)
 
 def check_logger():
+    """
+    Example usage:
+    ==============
+    import deepsensemaking as dsm
+    log = dsm.base.logger
+    log.setLevel(dsm.base.logging.INFO)
+    log.info("dsm version: " + str(dsm.__version__))
+    dsm.base.check_logger()
+    """
     logger.debug("debug message")
     logger.info("info message")
     logger.warning("warning message")
@@ -41,6 +50,12 @@ def check_logger():
 
 
 def set_cwd():
+    """
+    Example usage:
+    ==============
+    import deepsensemaking as dsm
+    DIR_PROJ_MAIN = dsm.set_cwd()
+    """
     stck = inspect.stack()[1][0]
     vard = stck.f_locals
     keys = list(vard.keys())
@@ -55,6 +70,13 @@ def set_cwd():
 
 
 def inside_emacs():
+    """
+    Example usage:
+    ==============
+    import deepsensemaking as dsm
+    import pandas as pd
+    pd.set_option("display.notebook_repr_html", not dsm.inside_emacs() )
+    """
     stck = inspect.stack()[1][0]
     vard = stck.f_locals
     keys = list(vard.keys())
