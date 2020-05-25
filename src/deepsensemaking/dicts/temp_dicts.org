@@ -1,6 +1,9 @@
 
 
 
+* Preliminary works
+
+
 #+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle yes
 
 def cumsum(acum_num, curr_iter, max_iter=11, verbose=0,):
@@ -296,6 +299,12 @@ pp(flatten(di_samp,max_level=1,))
 :end:
 
 #+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle ye
+
+from IPython import get_ipython
+get_ipython().magic("load_ext autoreload")
+get_ipython().magic("autoreload 2")
+
+
 import types
 import functools
 import numpy as np
@@ -352,7 +361,7 @@ pp(red_dict(in_dict=samp_dict,max_level=0,))
 
 #+RESULTS:
 :results:
-# Out[16]:
+# Out[1]:
 # output
 : {(1,): 1.1,
 :  ('a1',): 'A1',
@@ -418,7 +427,7 @@ print_dict(in_dict=samp_dict,name="in_dict",max_level=1,disp_vals=True)
 
 #+RESULTS:
 :results:
-# Out[17]:
+# Out[2]:
 # output
 : in_dict[1] = 1.1
 : in_dict["a1"] = A1
@@ -443,5 +452,91 @@ print_dict(in_dict=samp_dict,name="in_dict",max_level=1,disp_vals=True)
 
 #+RESULTS:
 :results:
-# Out[4]:
+# Out[3]:
+:end:
+
+* Testing the final version
+
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle yes
+from deepsensemaking.dicts import samp_dict,reduce_dict,str_dict,print_dict
+print(samp_dict)
+#+END_SRC
+
+#+RESULTS:
+:results:
+# Out[6]:
+# output
+: {1: 1.1, 'a1': 'A1', 'a2': {'b1': 'A2-B1', 'b2': None, 'b3': <built-in function len>, 'b4': Empty DataFrame
+: Columns: []
+: Index: [], 'b5': array([[1., 0., 0.],
+:        [0., 1., 0.],
+:        [0., 0., 1.]]), 'b6': datetime.date(2020, 1, 1), 'b7': 'aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee', 'b8': [0, 1, 2, 3, 4]}, 'a3': {'b1': range(0, 120), 'b2': {0, 1, 2, 3, 4}}, 'a4': {'b1': {'c1': {'d1': 'A3-B1-C1-D1'}}}}
+:
+:end:
+
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle yes
+print(reduce_dict(in_dict=samp_dict,max_level=0,))
+#+END_SRC
+
+#+RESULTS:
+:results:
+# Out[7]:
+# output
+: {(1,): 1.1, ('a1',): 'A1', ('a2',): {'b1': 'A2-B1', 'b2': None, 'b3': <built-in function len>, 'b4': Empty DataFrame
+: Columns: []
+: Index: [], 'b5': array([[1., 0., 0.],
+:        [0., 1., 0.],
+:        [0., 0., 1.]]), 'b6': datetime.date(2020, 1, 1), 'b7': 'aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee', 'b8': [0, 1, 2, 3, 4]}, ('a3',): {'b1': range(0, 120), 'b2': {0, 1, 2, 3, 4}}, ('a4',): {'b1': {'c1': {'d1': 'A3-B1-C1-D1'}}}}
+:
+:end:
+
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle yes
+print(str_dict(in_dict=samp_dict,max_level=1,))
+#+END_SRC
+
+#+RESULTS:
+:results:
+# Out[8]:
+# output
+: in_dict[1] = 1.1
+: in_dict["a1"] = A1
+: in_dict["a2"]["b1"] = A2-B1
+: in_dict["a2"]["b2"] = None #<NoneType>
+: in_dict["a2"]["b3"] = <builtin_function_or_method:len>
+: in_dict["a2"]["b4"] = <DataFrame>
+: in_dict["a2"]["b5"] = <ndarray> # shape: (3, 3)
+: in_dict["a2"]["b6"] = datetime.date(2020, 1, 1) # <date>
+: in_dict["a2"]["b7"] = aaaaaaaaaabbbbbbbbbbccccccccccdddddddddd + [ ... ] # trimmed val...
+: in_dict["a2"]["b8"] = [0, 1, 2, 3, 4]
+: in_dict["a3"]["b1"] = <range>
+: in_dict["a3"]["b2"] = {0, 1, 2, 3, 4}
+: in_dict["a4"]["b1"] = <dict>
+:
+:
+:end:
+
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle yes
+from deepsensemaking.dicts import samp_dict,reduce_dict,str_dict,print_dict
+print_dict(in_dict=samp_dict,max_level=2,)
+#+END_SRC
+
+#+RESULTS:
+:results:
+# Out[15]:
+# output
+: in_dict[1] = 1.1
+: in_dict["a1"] = A1
+: in_dict["a2"]["b1"] = A2-B1
+: in_dict["a2"]["b2"] = None #<NoneType>
+: in_dict["a2"]["b3"] = <builtin_function_or_method:len>
+: in_dict["a2"]["b4"] = <DataFrame>
+: in_dict["a2"]["b5"] = <ndarray> # shape: (3, 3)
+: in_dict["a2"]["b6"] = datetime.date(2020, 1, 1) # <date>
+: in_dict["a2"]["b7"] = aaaaaaaaaabbbbbbbbbbccccccccccdddddddddd + [ ... ] # trimmed val...
+: in_dict["a2"]["b8"] = [0, 1, 2, 3, 4]
+: in_dict["a3"]["b1"] = <range>
+: in_dict["a3"]["b2"] = {0, 1, 2, 3, 4}
+: in_dict["a4"]["b1"]["c1"] = <dict>
+:
+:
 :end:

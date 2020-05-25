@@ -13,6 +13,18 @@ from functools import reduce
 from pprint import pprint as pp
 import deepsensemaking as dsm
 
+from dotmap import DotMap
+
+class StuDict(DotMap):
+    def __init__(self):
+        pass
+
+
+
+
+
+
+
 samp_dict = {}
 samp_dict[1] = 1.1
 samp_dict["a1"] = "A1"
@@ -35,13 +47,13 @@ samp_dict["a4"]["b1"]["c1"] = {}
 samp_dict["a4"]["b1"]["c1"]["d1"] = "A3-B1-C1-D1"
 samp_dict
 
-def red_dict(in_dict,max_level=None,):
+def reduce_dict(in_dict,max_level=None,):
     """
     Example usage:
     ==============
     from deepsensemaking.dict import samp_dict
-    from deepsensemaking.dict import red_dict
-    print(red_dict(in_dict=samp_dict,max_level=1,))
+    from deepsensemaking.dict import reduce_dict
+    print(reduce_dict(in_dict=samp_dict,max_level=1,))
 
     """
     reducer_seed = tuple()
@@ -50,9 +62,10 @@ def red_dict(in_dict,max_level=None,):
         def flatten_func(new_in_dict, kv):
             return \
                 (max_level is None or level < max_level) \
-                and isinstance(kv[1], dict) \
+                and isinstance(kv[1], (dict)) \
                 and {**new_in_dict, **impl(kv[1], reducer_func(pref, kv[0]), level + 1)} \
                 or {**new_in_dict, reducer_func(pref, kv[0]): kv[1]}
+
         return reduce(
             flatten_func,
             in_dict.items(),
@@ -68,13 +81,13 @@ def str_dict(in_dict,name="in_dict",max_level=1,disp_vals=True,max_len=40,):
     Example usage:
     ==============
     from deepsensemaking.dict import samp_dict
-    from deepsensemaking.dict import red_dict
-    print(str_dict(in_dict=samp_dict,max_level=1,))
+    from deepsensemaking.dict import str_dict
+    print(str_dict(in_dict=samp_dict,max_level=1,,disp_vals=True,max_len=40,))
 
     """
     repr_func = lambda item: "\""+item+"\"" if isinstance(item, ( str, ) ) else str(item)
     out_str = ""
-    for key,val in red_dict(in_dict,max_level=max_level,).items():
+    for key,val in reduce_dict(in_dict,max_level=max_level,).items():
         out_str += name if name else ""
         out_str += "["
         out_str += "][".join( repr_func(item) for item in key )
@@ -86,7 +99,7 @@ def str_dict(in_dict,name="in_dict",max_level=1,disp_vals=True,max_len=40,):
             if isinstance(val,(list,tuple,set,str,int,float,complex,re.Pattern,)):
                 val_str = str(val)
                 if len(val_str) > max_len:
-                    val_str = val_str[:40] + " + [ ... ] # trimmed val..."
+                    val_str = val_str[:50] + " + [ ... ] # trimmed val..."
             elif val is None:
                 val_str = str(val) + " #<" + str(type(val).__name__) + ">"
             elif isinstance(val,(types.FunctionType,types.BuiltinFunctionType,functools.partial,)):
@@ -103,13 +116,13 @@ def str_dict(in_dict,name="in_dict",max_level=1,disp_vals=True,max_len=40,):
     return out_str
 
 
-def print_dict(in_dict,name="in_dict",max_level=1,disp_vals=True):
+def print_dict(in_dict,name="in_dict",max_level=1,disp_vals=True,max_len=40,):
     """
     Example usage:
     ==============
     from deepsensemaking.dict import samp_dict
-    from deepsensemaking.dict import red_dict
-    print_dict(in_dict=samp_dict,max_level=1,)
+    from deepsensemaking.dict import print_dict
+    print_dict(in_dict=samp_dict,max_level=1,disp_vals=True,max_len=40,)
 
     """
-    print(str_dict(in_dict,name=name,max_level=max_level,disp_vals=disp_vals))
+    print(str_dict(in_dict,name=name,max_level=max_level,disp_vals=disp_vals,max_len=max_len,))
