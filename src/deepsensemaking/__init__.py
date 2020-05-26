@@ -11,6 +11,7 @@ from deepsensemaking._version import __version__
 from deepsensemaking import info
 from deepsensemaking import base
 from deepsensemaking import bids
+from deepsensemaking import jiko
 from deepsensemaking import dicts
 from deepsensemaking import strings
 

@@ -77,13 +77,13 @@ def reduce_dict(in_dict,max_level=None,):
 
 
 
-def str_dict(in_dict,name="in_dict",max_level=1,disp_vals=True,max_len=40,):
+def str_dict(in_dict,name="in_dict",max_level=None,disp_vals="some",disp_types="some",max_len=42,):
     """
     Example usage:
     ==============
     from deepsensemaking.dicts import str_dict
     from deepsensemaking.dicts import samp_dict
-    print(str_dict(in_dict=samp_dict,max_level=1,,disp_vals=True,max_len=40,))
+    print(str_dict(in_dict=samp_dict,max_level=2,,disp_vals=True,max_len=40,))
 
     """
     repr_func = lambda item: "\""+item+"\"" if isinstance(item, ( str, ) ) else str(item)
@@ -93,53 +93,60 @@ def str_dict(in_dict,name="in_dict",max_level=1,disp_vals=True,max_len=40,):
         out_str += "["
         out_str += "][".join( repr_func(item) for item in key )
         out_str += "]"
-        if disp_vals:
-            out_str += " = "
-            val_str = "<???>"
+        val_str = ""
+        type_str = ""
+        if disp_vals == "some" or disp_vals == "all":
             if isinstance(val,(list,tuple,set,str,re.Pattern,)):
-                val_str = repr_func(val)
+                val_str = " = " + repr_func(val)
             elif isinstance(val,(int,float,complex,)):
-                val_str = repr_func(val)
+                val_str = " = " + repr_func(val)
             elif val is None:
-                val_str = str(val)
+                val_str = " = " + str(val)
             elif isinstance(val,(types.FunctionType,types.BuiltinFunctionType,functools.partial,)):
-                val_str = val.__repr__()
+                val_str = " # " + val.__repr__()
             elif isinstance(val, (np.ndarray, np.generic,) ):
                 val_str = val.__repr__()
             elif isinstance(val, (pd.DataFrame,) ):
-                val_str = "pd.DtaFrame() # " + val.__repr__()
+                val_str = " # DF "
+                if disp_vals == "all":
+                    val_str = " # " + val.__repr__()
             elif isinstance(val, (dt.date,dt.time,dt.datetime,) ):
                 val_str = val.__repr__()
             else:
                 val_str = repr_func(val)
             # REPLACEMENTS
-            val_str = val_str.replace("\n", " ").replace("\r", "")
-            if isinstance(val,(np.ndarray,np.generic,dt.date,dt.time,dt.datetime,)):
+            val_str = val_str.replace("\n", "").replace("\r", "")
+            if isinstance(val,(np.ndarray,np.generic,dt.date,dt.time,dt.datetime,list,tuple,set,)):
                 val_str = val_str.replace(" ", "")
+            # TRIMMING
             if len(val_str) > max_len:
                 val_str = val_str[:max_len] + " # [...]"
-            # TRIMMING
-            if not isinstance(val,(types.FunctionType,types.BuiltinFunctionType,functools.partial,list,tuple,set,str,int,float,pd.DataFrame,)):
-                val_str += " # <" + str(type(val).__name__) + ">"
             # ADD SHAPE
-            if isinstance(val, (np.ndarray, np.generic,pd.DataFrame) ):
+            if isinstance(val, (np.ndarray,np.generic,pd.DataFrame) ):
                 val_str += " # shape: " + str(val.shape)
+            # ADD LEN
+            if isinstance(val, (list,tuple,set,) ):
+                val_str += " # len: " + str(len(val))
+        if disp_types == "some":
+            if not isinstance(val,(types.FunctionType,types.BuiltinFunctionType,functools.partial,list,tuple,set,str,int,float,)):
+                type_str = " # <" + str(type(val).__name__) + ">"
+        elif disp_types == "all":
+            if not isinstance(val,(types.FunctionType,types.BuiltinFunctionType,functools.partial,)):
+                type_str += " # <" + str(type(val).__name__) + ">"
 
-
-
-            out_str += str(val_str)
-
+        out_str += str(val_str)
+        out_str += str(type_str)
         out_str += "\n"
     return out_str
 
 
-def print_dict(in_dict,name="in_dict",max_level=1,disp_vals=True,max_len=40,):
+def print_dict(in_dict,name="in_dict",max_level=2,disp_vals=True,disp_types="some",max_len=40,):
     """
     Example usage:
     ==============
     from deepsensemaking.dicts import print_dict
     from deepsensemaking.dicts import samp_dict
-    print_dict(in_dict=samp_dict,max_level=1,disp_vals=True,max_len=40,)
+    print_dict(in_dict=samp_dict,max_level=2,disp_vals=True,max_len=40,)
 
     """
-    print(str_dict(in_dict,name=name,max_level=max_level,disp_vals=disp_vals,max_len=max_len,))
+    print(str_dict(in_dict,name=name,max_level=max_level,disp_vals=disp_vals,disp_types=disp_types,max_len=max_len,))
