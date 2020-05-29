@@ -9,6 +9,8 @@ import inspect
 logger = logging.getLogger(__name__)
 
 logger.setLevel(logging.WARNING)
+logger.setLevel(logging.INFO)
+
 conHnd = logging.StreamHandler()
 conHnd.setLevel(logging.DEBUG)
 conHnd.setFormatter(
