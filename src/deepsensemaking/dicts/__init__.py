@@ -6,18 +6,20 @@
 import types
 import functools
 import numpy as np
-import re
 import datetime as dt
 import pandas as pd
 from functools import reduce
 from pprint import pprint as pp
 import deepsensemaking as dsm
 
-from dotmap import DotMap
+import re
 
-class StuDict(DotMap):
-    def __init__(self):
-        pass
+
+try:
+    regex_pattern = re._pattern_type
+except AttributeError:
+    # Python 3.7
+    regex_pattern = re.Pattern
 
 
 samp_dict = {}
@@ -90,7 +92,9 @@ def str_dict(in_dict,name="in_dict",max_level=None,disp_vals="some",disp_types="
         val_str = ""
         type_str = ""
         if disp_vals == "some" or disp_vals == "all":
-            if isinstance(val,(str,re.Pattern,)):
+            if isinstance(val,(str,)):
+                val_str = " = " + repr_func(val)
+            elif isinstance(val,(regex_pattern,)):
                 val_str = " = " + repr_func(val)
             elif isinstance(val,(list,tuple,set,)):
                 val_str = " = " + repr_func(val).replace(" ", "")
