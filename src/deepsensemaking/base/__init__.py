@@ -5,6 +5,7 @@ import os
 import pandas as pd
 import logging
 import inspect
+import pathlib
 
 logger = logging.getLogger(__name__)
 
@@ -51,41 +52,49 @@ def check_logger():
     logger.critical("critical message")
 
 
-def set_cwd():
+def set_cwd(var_name="EMACS_BUFFER_DIR"):
     """
     Example usage:
     ==============
     import deepsensemaking as dsm
-    DIR_PROJ_MAIN = dsm.set_cwd()
+    _DIR = dsm.set_cwd()
     """
-    stck = inspect.stack()[1][0]
-    vard = stck.f_locals
-    keys = list(vard.keys())
-    key  = "DIR_PROJ_MAIN"
-    logger.debug("variables: " + str(keys))
-    if key in keys:
-        logger.info("changing cwd: " + str(vard[key]))
-        os.chdir(vard[key])
+    dir0_path = str(pathlib.Path().resolve())
+    vars_dict = inspect.stack()[1][0].f_locals
+    vars_list = list(vars_dict.keys())
+    logger.debug("got var names: " + str(vars_list))
+    if var_name in vars_list:
+        logger.info("found '{}' variable".format(var_name))
+        dir1_path = str(pathlib.Path(vars_dict[var_name]).resolve())
+        dir2_path = vars_dict[var_name]
+        if dir0_path != dir1_path:
+            logger.info("changing CWD to '{}'".format(dir2_path))
+            os.chdir(vars_dict[var_name])
+        else:
+            logger.info("keeping '{}' as CWD".format(os.getcwd()))
     else:
-        logger.info("keeping cwd: " + str(os.getcwd()))
+        logger.info(f"no {var_name} variable was found")
+        logger.info("keeping '{}' as CWD".format(os.getcwd()))
     return os.getcwd()
 
 
-def inside_emacs():
+def outside_emacs(var_name="EMACS_BUFFER_DIR"):
     """
     Example usage:
     ==============
     import deepsensemaking as dsm
     import pandas as pd
-    pd.set_option("display.notebook_repr_html", not dsm.inside_emacs() )
+    pd.set_option("display.notebook_repr_html", outside_emacs() )
+    # To be used with org-mode
+    #+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var EMACS_BUFFER_DIR=(file-name-directory buffer-file-name) :tangle yes
+    #+END_SRC
     """
-    stck = inspect.stack()[1][0]
-    vard = stck.f_locals
-    keys = list(vard.keys())
-    key  = "DIR_PROJ_MAIN"
-    if key in keys:
-        logger.debug("inside_emacs = True")
-        return True
-    else:
-        logger.debug("inside_emacs = False")
+    vars_dict = inspect.stack()[1][0].f_locals
+    vars_list = list(vars_dict.keys())
+    logger.debug("got var names: " + str(vars_list))
+    if var_name in vars_list:
+        logger.debug("outside_emacs = False")
         return False
+    else:
+        logger.debug("outside_emacs = True")
+        return True

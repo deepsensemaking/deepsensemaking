@@ -3,7 +3,7 @@
 ** Split path
 *** Code
 
-#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle yes
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var EMACS_BUFFER_DIR=(file-name-directory buffer-file-name) :tangle yes
 
 def split_path( iFile ):
     import os
@@ -23,7 +23,7 @@ def split_path( iFile ):
 
 *** Testing
 
-#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle yes
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var EMACS_BUFFER_DIR=(file-name-directory buffer-file-name) :tangle yes
 
 iFile = "/dir1/dir2/dir3/file.name.nii.gz"
 
@@ -51,7 +51,7 @@ print("iExtn: " + str( iExtn ) )
 ** Get BIDS properties
 *** Code
 
-#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle yes
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var EMACS_BUFFER_DIR=(file-name-directory buffer-file-name) :tangle yes
 
 def get_BIDS_prop( iFile, prop ):
     import re
@@ -75,7 +75,7 @@ def get_BIDS_prop( iFile, prop ):
 
 *** Testing
 
-#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle yes
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var EMACS_BUFFER_DIR=(file-name-directory buffer-file-name) :tangle yes
 
 iFile = "/home/user/data/sub-sb008_ses-03func_task-01easy02led03corr_run-02_bold_space-MNI152NLin2009cAsym_preproc.nii.gz"
 subject = get_BIDS_prop( iFile, "sub" )
@@ -106,7 +106,7 @@ print("  space: " + space)
 
 
 
-#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle yes
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var EMACS_BUFFER_DIR=(file-name-directory buffer-file-name) :tangle yes
 
 import re
 def get_bids_prop( if_name, prop ):
@@ -120,7 +120,7 @@ def get_bids_prop( if_name, prop ):
 #+END_SRC
 
 
-#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle yes
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var EMACS_BUFFER_DIR=(file-name-directory buffer-file-name) :tangle yes
 
 
 if_name = "sub-sb008_ses-03func_task-01easy02led03corr_run-02_bold_space-MNI152NLin2009cAsym_preproc.nii.gz"
@@ -146,7 +146,7 @@ print("space: " + get_BIDS_prop( iFile, "space"))
 :end:
 
 
-#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle yes
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var EMACS_BUFFER_DIR=(file-name-directory buffer-file-name) :tangle yes
 
 
 get_BIDS_prop( iFile, "sub")
@@ -175,7 +175,7 @@ for item in ["sub","ses","task","run","space",]:
 :end:
 
 
-#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle yes
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var EMACS_BUFFER_DIR=(file-name-directory buffer-file-name) :tangle yes
 
 
 from deepsensemaking.bids import get_bids_prop

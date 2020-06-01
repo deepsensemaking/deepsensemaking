@@ -4,7 +4,7 @@
 * Preliminary works
 
 
-#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle yes
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var EMACS_BUFFER_DIR=(file-name-directory buffer-file-name) :tangle yes
 
 def cumsum(acum_num, curr_iter, max_iter=11, verbose=0,):
     if verbose >= 2:
@@ -37,7 +37,7 @@ def cumsum(acum_num, curr_iter, max_iter=11, verbose=0,):
 
 
 
-#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle yes
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var EMACS_BUFFER_DIR=(file-name-directory buffer-file-name) :tangle yes
 
 cumsum(0, 0, max_iter=12, verbose=2,)
 
@@ -69,7 +69,7 @@ cumsum(0, 0, max_iter=12, verbose=2,)
 
 
 
-#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle yes
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var EMACS_BUFFER_DIR=(file-name-directory buffer-file-name) :tangle yes
 from pprint import pprint as pp
 import deepsensemaking as dsm
 from deepsensemaking.dicts import gen_dict
@@ -139,7 +139,7 @@ pp(list(gen_dict2(indict=di_samp,pre=None,max_depth=5,curr_depth=0)))
 - https://stackoverflow.com/questions/6027558/flatten-nested-dictionaries-compressing-keys/41689055#41689055
 - https://stackoverflow.com/questions/6027558/flatten-nested-dictionaries-compressing-keys
 
-#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle ye
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var EMACS_BUFFER_DIR=(file-name-directory buffer-file-name) :tangle ye
 from functools import reduce
 
 def flatten(d, max_level=None, ):
@@ -175,7 +175,7 @@ pp(flatten(di_samp,max_level=1,))
 
 
 
-#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle yes
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var EMACS_BUFFER_DIR=(file-name-directory buffer-file-name) :tangle yes
 
 
 from functools import reduce
@@ -210,7 +210,7 @@ print(flatten(di_samp))
 
 
 
-#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle ye
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var EMACS_BUFFER_DIR=(file-name-directory buffer-file-name) :tangle ye
 from functools import reduce
 
 def flatten(d, max_level=None, ):
@@ -245,7 +245,7 @@ pp(flatten(di_samp,max_level=1,))
 :end:
 
 
-#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle ye
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var EMACS_BUFFER_DIR=(file-name-directory buffer-file-name) :tangle ye
 from functools import reduce
 
 def flatten(d, max_level=None, ):
@@ -286,7 +286,7 @@ pp(flatten(di_samp,max_level=1,))
 
 
 
-#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle yes
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var EMACS_BUFFER_DIR=(file-name-directory buffer-file-name) :tangle yes
 #+END_SRC
 
 #+RESULTS:
@@ -298,7 +298,7 @@ pp(flatten(di_samp,max_level=1,))
 :  'a3': {'b1': {'c1': 'aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee'}}}
 :end:
 
-#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle ye
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var EMACS_BUFFER_DIR=(file-name-directory buffer-file-name) :tangle ye
 
 from IPython import get_ipython
 get_ipython().magic("load_ext autoreload")
@@ -383,7 +383,7 @@ pp(red_dict(in_dict=samp_dict,max_level=0,))
 :end:
 
 
-#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle yes
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var EMACS_BUFFER_DIR=(file-name-directory buffer-file-name) :tangle yes
 
 def str_dict(in_dict,name="in_dict",max_level=1,disp_vals=True,max_len=40,):
     repr_func = lambda item: "\""+item+"\"" if isinstance(item, ( str, ) ) else str(item)
@@ -447,7 +447,7 @@ print_dict(in_dict=samp_dict,name="in_dict",max_level=1,disp_vals=True)
 :end:
 
 
-#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle yes
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var EMACS_BUFFER_DIR=(file-name-directory buffer-file-name) :tangle yes
 #+END_SRC
 
 #+RESULTS:
@@ -457,7 +457,7 @@ print_dict(in_dict=samp_dict,name="in_dict",max_level=1,disp_vals=True)
 
 * Testing the final version
 
-#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle yes
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var EMACS_BUFFER_DIR=(file-name-directory buffer-file-name) :tangle yes
 from deepsensemaking.dicts import samp_dict,reduce_dict,str_dict,print_dict
 print(samp_dict)
 #+END_SRC
@@ -474,7 +474,7 @@ print(samp_dict)
 :
 :end:
 
-#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle yes
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var EMACS_BUFFER_DIR=(file-name-directory buffer-file-name) :tangle yes
 print(reduce_dict(in_dict=samp_dict,max_level=0,))
 #+END_SRC
 
@@ -490,7 +490,7 @@ print(reduce_dict(in_dict=samp_dict,max_level=0,))
 :
 :end:
 
-#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle yes
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var EMACS_BUFFER_DIR=(file-name-directory buffer-file-name) :tangle yes
 print(str_dict(in_dict=samp_dict,max_level=1,))
 #+END_SRC
 
@@ -515,7 +515,7 @@ print(str_dict(in_dict=samp_dict,max_level=1,))
 :
 :end:
 
-#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var DIR_PROJ_MAIN=(file-name-directory buffer-file-name) :tangle yes
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var EMACS_BUFFER_DIR=(file-name-directory buffer-file-name) :tangle yes
 from deepsensemaking.dicts import samp_dict,reduce_dict,str_dict,print_dict
 print_dict(in_dict=samp_dict,max_level=2,)
 #+END_SRC

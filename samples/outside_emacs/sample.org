@@ -1,0 +1,24 @@
+#+TITLE: sample.org
+
+
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var EMACS_BUFFER_DIR=(file-name-directory buffer-file-name) :tangle yes
+# import os
+# os.chdir("/home")
+
+# del EMACS_BUFFER_DIR
+
+import deepsensemaking as dsm
+_DIR = dsm.set_cwd()
+from IPython import get_ipython
+get_ipython().magic("run project_setup.tg.ipy")
+
+#+END_SRC
+
+#+RESULTS:
+:results:
+# Out[11]:
+# output
+: INFO: found 'EMACS_BUFFER_DIR' variable
+: INFO: keeping '/home/jiko/cc/dev/py/major/2020-05-17__deepsensemaking/dsm_repo/sample' as CWD
+:
+:end:

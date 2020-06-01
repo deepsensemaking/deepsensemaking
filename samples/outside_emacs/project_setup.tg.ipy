@@ -1,0 +1,13 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+
+import pandas as pd
+pd.set_option("display.expand_frame_repr" , False)
+pd.set_option("display.max_rows"          ,    33)
+pd.set_option("display.max_columns"       ,    44)
+pd.set_option("display.width"             ,   160)
+pd.set_option("display.max_colwidth"      ,    40)
+
+import deepsensemaking as dsm
+pd.set_option("display.notebook_repr_html", dsm.outside_emacs() )

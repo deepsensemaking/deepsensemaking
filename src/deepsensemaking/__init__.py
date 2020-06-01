@@ -16,7 +16,7 @@ from deepsensemaking import dicts
 from deepsensemaking import strings
 
 
-from deepsensemaking.base import set_cwd, inside_emacs
+from deepsensemaking.base import set_cwd, outside_emacs
 
 
 if __name__ == "__main__":
