@@ -14,6 +14,8 @@ from deepsensemaking import bids
 from deepsensemaking import jiko
 from deepsensemaking import dicts
 from deepsensemaking import strings
+from deepsensemaking import within
+from deepsensemaking import eeg
 
 
 from deepsensemaking.base import set_cwd, outside_emacs

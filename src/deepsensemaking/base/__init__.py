@@ -11,10 +11,11 @@ logger = logging.getLogger(__name__)
 
 logger.setLevel(logging.WARNING)
 logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
-conHnd = logging.StreamHandler()
-conHnd.setLevel(logging.DEBUG)
-conHnd.setFormatter(
+logHnd0 = logging.StreamHandler()
+logHnd0.setLevel(logging.INFO)
+logHnd0.setFormatter(
     logging.Formatter(
         ": ".join([
             # "%(asctime)s",
@@ -28,21 +29,23 @@ conHnd.setFormatter(
 # Remove all handlers associated to a logger
 # NB: This alleviates problems that result from
 # ipython autoreload fnctionality
+# see: https://stackoverflow.com/questions/41443336/python-2-7-remove-handler-object-or-logger
+# [:] important not to mutate the list during iteration over it
 for handler in logger.handlers[:]:
     logger.removeHandler(handler)
 
 
 # Add stream handler
-logger.addHandler(conHnd)
+logger.addHandler(logHnd0)
 
 def check_logger():
     """
     Example usage:
     ==============
     import deepsensemaking as dsm
-    log = dsm.base.logger
-    log.setLevel(dsm.base.logging.INFO)
-    log.info("dsm version: " + str(dsm.__version__))
+    log0 = dsm.base.logger
+    log0.setLevel(dsm.base.logging.INFO)
+    log0.info("dsm version: " + str(dsm.__version__))
     dsm.base.check_logger()
     """
     logger.debug("debug message")

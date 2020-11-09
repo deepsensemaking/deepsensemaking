@@ -83,7 +83,7 @@ def str_dict(in_dict,name="in_dict",max_level=None,disp_vals="some",disp_types="
 
     """
     repr_func = lambda item: "\""+item+"\"" if isinstance(item, ( str, ) ) else str(item)
-    out_str = ""
+    out_str = "\n"
     for key,val in reduce_dict(in_dict,max_level=max_level,).items():
         out_str += name if name else ""
         out_str += "["
@@ -158,3 +158,26 @@ def print_dict(in_dict,name="in_dict",max_level=None,disp_vals="some",disp_types
             max_len    = max_len,
         )
     )
+
+
+
+
+
+
+
+
+
+
+def str_DFs( DFs, STG=0, if_name="if_name", df_data="df_data",):
+    list_if_names = []
+    out_str = ""
+    for KEY in DFs.keys():
+        list_if_names = list_if_names + [ DFs[KEY][if_name] ]
+
+    len_max = len(max(list_if_names, key=len)) + 2
+    out_str += "{:>{}s}".format("num",4)    + " | " + "{:>{}s}".format("KEY",4)     + " | " + "{:>{}s}".format(str(if_name)      ,len_max) + " | " + "{:>{}s}".format("num_rows"                     ,15) + " | " + "{:>{}s}".format("num_cols"                       ,15) + " | " + str("list_cols\n")
+    out_str += "-"*4                        + "-+-" + "-"*4                         + "-+-" + "-"*(len_max)                                + "-+-" + "-"*15                                               + "-+-" + "-"*15                                                 + "-+-" + "----->\n"
+    for ii, KEY in enumerate(DFs.keys()):
+        out_str += "{:>{}s}".format(str(ii), 4) + " | " + "{:>{}s}".format(str(KEY), 4) + " | " + "{:>{}s}".format(DFs[KEY][if_name] ,len_max) + " | " + "{:>{}d}".format(DFs[KEY][df_data][STG].shape[0],15) + " | " + "{:>{}d}".format(DFs[KEY][df_data][STG].shape[1],15) + " | " + str(list(DFs[KEY][df_data][STG].columns)) + "\n"
+
+    return out_str

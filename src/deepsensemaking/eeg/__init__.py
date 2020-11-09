@@ -6,3 +6,5 @@ deepsensemaking (dsm) eeg auxiliary tools
 
 
 """
+
+from deepsensemaking.eeg import mne

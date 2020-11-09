@@ -1,0 +1,36 @@
+
+
+
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var EMACS_BUFFER_DIR=(file-name-directory buffer-file-name) :tangle yes
+
+class Person(object):
+    def __init__(self, person_name, family):
+        self.person_name = person_name
+        self.family = family
+
+    def __str__(self):
+        return ' '.join((self.person_name, self.family.family_name))
+
+class Family(object):
+    def __init__(self, family_name):
+        self.family_name = family_name
+        self.members = []
+
+    def add_person(self, person_name):
+        person = Person(person_name, self)
+        self.members.append(person)
+        return person
+
+    def __str__(self):
+        return 'The %s family: ' % self.family_name + ', '.join(str(x) for x in self.members)
+
+
+
+
+
+
+strauss = Family('Strauss')
+johannes = strauss.add_person('Johannes')
+richard = strauss.add_person('Richard')
+
+#+END_SRC

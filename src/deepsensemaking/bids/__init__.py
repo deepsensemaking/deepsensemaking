@@ -22,7 +22,7 @@ def get_bids_prop( if_name, prop ):
     # r = re.compile( prop + r"-(.*?)(?:_+)" )
     # r = re.compile( prop + r"-(.*?)(?:$)" )
     # r = re.compile( prop + r"-(.*?)(?:_+|$)" )
-    r = re.compile( prop + r"-(.*?)(?:_|$)" )
+    r = re.compile( prop + r"-(.*?)(?:_|$|\.)" )
     m = r.findall( if_name )
     if m:
         return m[0]
