@@ -92,8 +92,8 @@ def get_int_input(prompt,valmin,valmax):
     return value
 
 
-space0 = [ ""   , "- "   , "  - "   , ]
-space1 = [ "\n" , "\n  " , "\n    " , ]
+space0 = [ ""   , "- "   , "  - "   , "    - "   , ]
+space1 = [ "\n" , "\n  " , "\n    " , "\n      " , ]
 
 
 class BatchMNE:
@@ -145,7 +145,8 @@ class BatchMNE:
         os.makedirs(self.loggerDir,mode=0o700,exist_ok=True,)
 
         ## Setup the logger
-        self.logger = logging.getLogger(__name__)
+        self.logging = logging
+        self.logger  = logging.getLogger(__name__)
         """
         self.logger.setLevel(logging.CRITICAL) # 50
         self.logger.setLevel(logging.ERROR)    # 40
@@ -155,9 +156,9 @@ class BatchMNE:
         self.logger.setLevel(logging.NOTSET)   # 00
         """
         self.logger.setLevel(logging.DEBUG)    # 10
-        handler0 = logging.StreamHandler()
-        handler0.setLevel(logging.INFO)
-        handler0.setFormatter(
+        self.handler0 = logging.StreamHandler()
+        self.handler0.setLevel(logging.INFO)
+        self.handler0.setFormatter(
             logging.Formatter(" ".join([
                 # "%(asctime)s",
                 # "%(name)s",
@@ -170,9 +171,9 @@ class BatchMNE:
             )
         )
         fn0 = self.loggerDir/(dt.datetime.now(loc_tz).strftime("%Y%m%d_%H%M%S_%f")[:-3]+".log")
-        handler1 = logging.FileHandler(fn0)
-        handler1.setLevel(logging.DEBUG)
-        handler1.setFormatter(
+        self.handler1 = logging.FileHandler(fn0)
+        self.handler1.setLevel(logging.DEBUG)
+        self.handler1.setFormatter(
             logging.Formatter(" ".join([
                 "%(asctime)s",
                 # "%(name)s",
@@ -185,8 +186,8 @@ class BatchMNE:
             )
         )
         for handler in self.logger.handlers[:]: self.logger.removeHandler(handler)
-        self.logger.addHandler(handler0)
-        self.logger.addHandler(handler1)
+        self.logger.addHandler(self.handler0)
+        self.logger.addHandler(self.handler1)
 
         ## Also attach MNE logger???
         temp_attach_MNE_logger = False
@@ -194,12 +195,12 @@ class BatchMNE:
         if temp_attach_MNE_logger:
             for handler in mne.utils.logger.handlers[:]: mne.utils.logger.removeHandler(handler)
             mne.utils.logger.setLevel(logging.DEBUG)
-            mne.utils.logger.addHandler(handler0)
-            mne.utils.logger.addHandler(handler1)
+            mne.utils.logger.addHandler(self.handler0)
+            mne.utils.logger.addHandler(self.handler1)
 
         self.logger.info (space0[0]+"logging to: "+str(fn0))
-        self.logger.info (space0[0]+"handler0 level: "+str(logging.getLevelName(handler0)))
-        self.logger.info (space0[0]+"handler1 level: "+str(logging.getLevelName(handler1)))
+        self.logger.info (space0[0]+"handler0 level: "+str(logging.getLevelName(self.handler0)))
+        self.logger.info (space0[0]+"handler1 level: "+str(logging.getLevelName(self.handler1)))
         self.logger.info (space0[0]+"MNE version: " + str(mne.__version__))
         self.logger.info (space0[0]+self.objName +" (BatchMNE) was CASTED (NICE)!!!")
 
@@ -221,19 +222,24 @@ class BatchMNE:
 
     def __str__(self):
         out_str  = ""
-        out_str += space1[1]+self.objName+".objName     = "+str(self.objName    )
-        out_str += space1[1]+self.objName+".INSP        = "+str(self.INSP       )
-        out_str += space1[1]+self.objName+".sourceDir   = "+str(self.sourceDir  )
-        out_str += space1[1]+self.objName+".targetDir   = "+str(self.targetDir  )
-        out_str += space1[1]+self.objName+".loggerDir   = "+str(self.loggerDir  )
-        out_str += space1[1]+self.objName+".globSuffix  = "+str(self.globSuffix )
-        out_str += space1[1]+self.objName+".globPattern = "+str(self.globPattern)
-        out_str += space1[1]+self.objName+".setupFile   = "+str(self.setupFile  )
-        out_str += space1[1]+self.objName+".stimuliFile = "+str(self.stimuliFile)
+        out_str += space0[1]+"{} is a {} object defined by its major properties such as:".format(
+            self.objName,
+            type(self).__name__,
+        )
+        out_str += "\n"
+        out_str += space1[1]+self.objName+".objName     = "+repr(str(self.objName    ))
+        out_str += space1[1]+self.objName+".sourceDir   = "+repr(str(self.sourceDir  ))
+        out_str += space1[1]+self.objName+".targetDir   = "+repr(str(self.targetDir  ))
+        out_str += space1[1]+self.objName+".loggerDir   = "+repr(str(self.loggerDir  ))
+        out_str += space1[1]+self.objName+".globSuffix  = "+repr(str(self.globSuffix ))
+        out_str += space1[1]+self.objName+".globPattern = "+repr(str(self.globPattern))
+        out_str += space1[1]+self.objName+".setupFile   = "+repr(str(self.setupFile  ))
+        out_str += space1[1]+self.objName+".stimuliFile = "+repr(str(self.stimuliFile))
         out_str += space1[1]+self.objName+".verbose     = "+str(self.verbose    )
         out_str += space1[1]+self.objName+".logger      : "+str(self.logger     )
         out_str += space1[1]+self.objName+".inputPaths  : "+"contains {} items".format(len(self.inputPaths))
         out_str += space1[1]+self.objName+".dataBase    : "+"contains {} items".format(len(self.dataBase))
+        out_str += "\n"
         return out_str
 
 
@@ -274,7 +280,7 @@ class BatchMNE:
             with open(if_selector_path) as fh0:
                 for line in fh0:
                     line = line.strip()
-                    if line != "":
+                    if line:
                         selector_str_list.append(line.strip())
 
             if selector_str_list:
@@ -343,6 +349,7 @@ class BatchMNE:
 
 
     class DataBase(UserList):
+
 
         def __init__(self,BATCH,INSP,objName,):
             UserList.__init__(self)
@@ -459,6 +466,8 @@ class BatchMNE:
 
 
         class Setup(UserDict):
+
+
             def __init__(self,BATCH,INSP,objName):
                 UserDict.__init__(self)
                 self.objName = objName
@@ -498,7 +507,8 @@ class BatchMNE:
                 )
                 out_str += "\n"
                 out_str += str_dict(
-                    self.data,"   {}".format(
+                    self.data,
+                    "   {}".format(
                         ".".join(self.INSP),
                     )
                 )
@@ -531,6 +541,8 @@ class BatchMNE:
 
 
         class DataSet():
+
+
             def __init__(self,BATCH,INSP,item,idx):
                 self.BATCH    = BATCH
                 self.INSP     = [item for item in INSP]
@@ -570,6 +582,8 @@ class BatchMNE:
 
 
             class Locs:
+
+
                 def __init__(self,BATCH,INSP,item,objName):
                     self.objName       = objName
                     self.INSP          = [item for item in INSP]+[objName]
@@ -686,11 +700,12 @@ class BatchMNE:
 
 
             ## =============================================================================
-            ## Signal Preprocessing Utilities Batch Functions go below this point
+            ## EEG signal preprocessing functions go below this point
             ## =============================================================================
 
-            ## TODO FIXME add "if_extn" property and
+            ## TODO FIXME CONSIDER adding "if_extn" property and
             ## a case switch for loading variety of file types
+            ## using just one function
 
             def read_raw_data(self,raw0="raw0",preload=True,verbose=None):
                 self.BATCH.logger.info(
@@ -698,19 +713,19 @@ class BatchMNE:
                         ".".join(self.INSP),
                         str(whoami()),
                 ))
-                self.BATCH.logger.info (space0[1]+"reading raw data ")
+                self.BATCH.logger.info (space0[1]+"reading raw data...")
                 if_path = self.locs.if_path
                 of_stem = self.locs.of_stem
-                self.BATCH.logger.info (space0[1]+"processing: " + str(self))
-                self.BATCH.logger.info (space0[1]+"raw0: "       + str(raw0))
-                self.BATCH.logger.debug(space0[1]+"if_path: "    + str(if_path))
-                self.BATCH.logger.debug(space0[1]+"of_stem: "    + str(of_stem))
-                self.BATCH.logger.debug(space0[1]+"preload: "    + str(preload))
-                self.BATCH.logger.debug(space0[1]+"verbose: "    + str(verbose))
-                self.BATCH.logger.info (space0[1]+"EXEC: mne.io.read_raw_brainvision()")
-                ## Re-create dictionary
-                self.data = OrderedDict()
-                self.data[raw0] = mne.io.read_raw_brainvision(
+                of_base = self.locs.of_base
+                of_done = self.locs.of_done
+                self.BATCH.logger.info (space0[1]+"processing: {}".format(repr(str( self    ))))
+                self.BATCH.logger.info (space0[1]+"if_path: {}"   .format(repr(str( if_path ))))
+                self.BATCH.logger.info (space0[1]+"of_stem: {}"   .format(repr(str( of_stem ))))
+                self.BATCH.logger.info (space0[1]+"of_base: {}"   .format(repr(str( of_base ))))
+                self.BATCH.logger.info (space0[1]+"of_done: {}"   .format(repr(str( of_done ))))
+                self.BATCH.logger.info (space0[1]+"raw0: {}"      .format(repr(str( raw0    ))))
+                self.BATCH.logger.info (space0[1]+"EXEC: {}"      .format("mne.io.read_raw_brainvision()"))
+                ARGS = dict(
                     vhdr_fname = if_path,
                     eog        = ['HEOGL','HEOGR','VEOGb'],
                     misc       = 'auto',
@@ -718,10 +733,29 @@ class BatchMNE:
                     preload    = preload,
                     verbose    = verbose,
                 )
-                self.BATCH.logger.info (space0[1]+"updating dataset description")
+                self.BATCH.logger.info(
+                    space0[1]+"ARGS:\n{}".format(
+                        str_dict(ARGS,"   ARGS",max_len=77,)
+                    )
+                )
+
+                ## Re-create dictionary
+                ## Start from the scratch
+                ## because fresh raw data is being loaded
+                self.BATCH.logger.info (space0[1]+"re-creating data dictionary...")
+                self.data = OrderedDict()
+
+                self.BATCH.logger.info (space0[1]+"loading data...")
+                self.data[raw0] = mne.io.read_raw_brainvision(
+                    **ARGS
+                )
+
+                self.BATCH.logger.info (space0[1]+"updating dataset description...")
                 self.data[raw0].info["description"] = str(of_stem)
+                self.BATCH.logger.info (space0[1]+"DONE...")
 
 
+            ## TODO TEST ME
             def read_hkl_data(self,):
                 self.BATCH.logger.info(
                     space0[0]+"RUNNING: {}.{}".format(
@@ -731,11 +765,24 @@ class BatchMNE:
                 self.BATCH.logger.info (space0[1]+"reading raw data ")
                 if_path = self.locs.if_path
                 of_stem = self.locs.of_stem
-                self.BATCH.logger.info (space0[1]+"processing: " + str(self))
-                self.BATCH.logger.debug(space0[1]+"if_path: "    + str(if_path))
-                self.BATCH.logger.debug(space0[1]+"of_stem: "    + str(of_stem))
+                of_base = self.locs.of_base
+                of_done = self.locs.of_done
+                self.BATCH.logger.info (space0[1]+"processing: {}".format(repr(str( self    ))))
+                self.BATCH.logger.info (space0[1]+"if_path: {}"   .format(repr(str( if_path ))))
+                self.BATCH.logger.info (space0[1]+"of_stem: {}"   .format(repr(str( of_stem ))))
+                self.BATCH.logger.info (space0[1]+"of_base: {}"   .format(repr(str( of_base ))))
+                self.BATCH.logger.info (space0[1]+"of_done: {}"   .format(repr(str( of_done ))))
+                self.BATCH.logger.info (space0[1]+"EXE:     {}"   .format("hkl.load()"))
+                ARGS = dict(
+                    fileobj = if_path,
+                )
+                self.BATCH.logger.info(
+                    space0[1]+"ARGS:\n{}".format(
+                        str_dict(ARGS,"   ARGS",max_len=77,)
+                    )
+                )
                 self.data = hkl.load(
-                    if_path,
+                    **ARGS
                 )
 
 
@@ -745,20 +792,28 @@ class BatchMNE:
                         ".".join(self.INSP),
                         str(whoami()),
                 ))
-                self.BATCH.logger.info (space0[1]+"checking number of channels")
-                self.BATCH.logger.info (space0[1]+"processing: " + str(self))
-                self.BATCH.logger.info (space0[1]+"raw0: "    + str(raw0))
-                chans_init = self.BATCH.dataBase.setup["chans"]["init"]
-                temp_chans = len(self.data[raw0].copy().pick_types(meg=False,eeg=True).ch_names)
-                self.BATCH.logger.debug(space0[1]+"chans_init: " + str(chans_init))
-                self.BATCH.logger.debug(space0[1]+"temp_chans: " + str(temp_chans))
-                assert chans_init == temp_chans, "PROBLEM: "+" ".join([
-                    "Problem occured",
-                    "while reading '{}'".format(str(self.data[raw0])),
-                    "data was expected to contain {} EEG channels,".format(chans_init,),
-                    "but {} were found!".format(temp_chans,),
-                ])
-                self.BATCH.logger.debug(space0[1]+"all assertions were met... GREAT!")
+                self.BATCH.logger.info (space0[1]+"checking consistency for number of channels...")
+                self.BATCH.logger.info (space0[1]+"processing: {}".format(repr(str( self ))))
+                self.BATCH.logger.info (space0[1]+"raw0: {}"      .format(repr(str( raw0 ))))
+
+
+                self.BATCH.logger.info (space0[1]+"getting expected number of channels from SETUP...")
+                chans_EXP = self.BATCH.dataBase.setup["chans"]["init"]
+                self.BATCH.logger.debug(space0[2]+"got chans_EXP: " + str(chans_EXP))
+
+                self.BATCH.logger.info (space0[1]+"getting number of channels from DATA...")
+                chans_ACT = len(self.data[raw0].copy().pick_types(meg=False,eeg=True).ch_names)
+                self.BATCH.logger.debug(space0[2]+"got chans_ACT: " + str(chans_ACT))
+
+                assert chans_EXP == chans_ACT, "PROBLEM: {}".format(
+                    " ".join([
+                        "Problem occured",
+                        "while reading '{}'.".format(str(self.data[raw0])),
+                        "It was expected to contain {} EEG channels,".format(chans_EXP,),
+                        "but {} were found!".format(chans_ACT,),
+                    ])
+                )
+                self.BATCH.logger.info (space0[1]+"all assertions were met... GREAT!")
 
 
             def check_BAD_chans_file(self,raw0="raw0",):
@@ -767,12 +822,12 @@ class BatchMNE:
                         ".".join(self.INSP),
                         str(whoami()),
                 ))
-                self.BATCH.logger.info (space0[1]+"checking BAD channels information file")
-                self.BATCH.logger.info (space0[1]+"processing: " + str(self))
-                self.BATCH.logger.info (space0[1]+"raw0: "    + str(raw0))
-                bad_names = list()
-                of_BAD_chans   = self.locs.of_BAD_chans
-                self.BATCH.logger.debug(space0[1]+"looking for: " + str(of_BAD_chans))
+                self.BATCH.logger.info (space0[1]+"checking BAD channels information file...")
+                self.BATCH.logger.info (space0[1]+"processing: {}".format(repr(str( self ))))
+                self.BATCH.logger.info (space0[1]+"raw0: {}"      .format(repr(str( raw0 ))))
+                bad_names    = list()
+                of_BAD_chans = self.locs.of_BAD_chans
+                self.BATCH.logger.debug(space0[1]+"looking for: {}".format(repr(str(of_BAD_chans))))
                 if os.path.exists(of_BAD_chans):
                     self.BATCH.logger.info(space0[1]+"found BAD channels file...")
                     with open(of_BAD_chans) as fh:
@@ -784,43 +839,90 @@ class BatchMNE:
                 else:
                     self.BATCH.logger.info(space0[1]+"BAD channels file NOT found...")
 
-                self.BATCH.logger.info (space0[1]+"bad_names: "    + str(bad_names))
                 if bad_names:
+                    self.BATCH.logger.info (space0[1]+"bad_names: {}".format(str(bad_names)))
                     self.BATCH.logger.info(space0[1]+"adding BAD channels informtion to raw data")
                     self.data[raw0].info['bads'] += bad_names
+
                     self.BATCH.logger.info(space0[1]+"uniquifying bad channels info")
                     self.data[raw0].info['bads'] = list(set(self.data[raw0].info['bads']))
 
+                else:
+                    self.BATCH.logger.warning(space0[1]+"bad_names: {}".format(str(bad_names)))
 
-            def average_reference_projection(self,raw0="raw0",montage="standard_1005",ref_channels = "average",):
+
+            def average_reference_projection(self,raw0="raw0",montage="standard_1005",ref_chans_NEW = "average",):
                 self.BATCH.logger.info(
                     space0[0]+"RUNNING: {}.{}".format(
                         ".".join(self.INSP),
                         str(whoami()),
                 ))
-                self.BATCH.logger.info (space0[1]+"adding reference projection")
-                self.BATCH.logger.info (space0[1]+"processing: " + str(self))
-                ref_chans = self.BATCH.dataBase.setup["chans"]["refs"]
-                self.BATCH.logger.info (space0[1]+"raw0: "    + str(raw0))
-                self.BATCH.logger.info (space0[1]+"adding actual (OLD) reference channel(s) to data")
-                self.BATCH.logger.info (space0[1]+"adding {} to DATA".format(ref_chans))
-                mne.add_reference_channels(
+
+
+
+                self.BATCH.logger.info (space0[1]+"adding reference projection...")
+                if_path = self.locs.if_path
+                of_stem = self.locs.of_stem
+                of_base = self.locs.of_base
+                of_done = self.locs.of_done
+                self.BATCH.logger.info (space0[1]+"processing: {}".format(repr(str( self    ))))
+                self.BATCH.logger.info (space0[1]+"raw0: {}"      .format(repr(str( raw0    ))))
+
+                self.BATCH.logger.info (space0[1]+"adding actual (OLD) reference channel(s) to data...")
+                ref_chans_OLD = self.BATCH.dataBase.setup["chans"]["refs"]
+                self.BATCH.logger.info (space0[1]+"ref_chans_OLD: {}".format(ref_chans_OLD))
+                self.BATCH.logger.info (space0[1]+"EXEC: {}" .format("mne.add_reference_channels()"))
+                ARGS = dict(
                     inst         = self.data[raw0],
-                    ref_channels = ref_chans,
+                    ref_channels = ref_chans_OLD,
                     copy         = False,
                 )
-                self.BATCH.logger.info (space0[1]+"setting montage")
-                self.BATCH.logger.info (space0[1]+"using {}".format(repr(montage)))
-                self.data[raw0].set_montage(
-                    montage=montage,
+                self.BATCH.logger.info(
+                    space0[1]+"ARGS:\n{}".format(
+                        str_dict(ARGS,"   ARGS",max_len=77,)
+                    )
                 )
-                self.BATCH.logger.info(space0[1]+"setting average reference projection")
-                self.BATCH.logger.info (space0[1]+"ref_channels (NEW): {}".format(ref_channels))
-                self.data[raw0].set_eeg_reference(
-                    ref_channels = ref_channels,
+                self.BATCH.logger.info (space0[2]+"adding {} to DATA".format(repr(str(ref_chans_OLD))))
+                mne.add_reference_channels(
+                    **ARGS
+                )
+
+                self.BATCH.logger.info (space0[1]+"setting montage...")
+                self.BATCH.logger.info (space0[1]+"montage: {}".format(repr(str(montage))))
+                self.BATCH.logger.info (space0[1]+"EXEC: {}[{}].{}".format(".".join(self.INSP),repr(raw0),"set_montage"))
+                ARGS = dict(
+                    montage = montage,
+                )
+                self.BATCH.logger.info(
+                    space0[1]+"ARGS:\n{}".format(
+                        str_dict(ARGS,"   ARGS",max_len=77,)
+                    )
+                )
+                self.data[raw0].set_montage(
+                    **ARGS
+                )
+
+                self.BATCH.logger.info(space0[1]+"setting average reference projection...")
+                self.BATCH.logger.info (space0[1]+"ref_chans_NEW: {}".format(ref_chans_NEW))
+                self.BATCH.logger.info (space0[1]+"EXEC: {}[{}].{}".format(".".join(self.INSP),repr(raw0),"set_eeg_reference"))
+                ARGS = dict(
+                    ref_channels = ref_chans_NEW,
                     projection   = True,
                     ch_type      = "eeg",
                 )
+                self.BATCH.logger.info(
+                    space0[1]+"ARGS:\n{}".format(
+                        str_dict(ARGS,"   ARGS",max_len=77,)
+                    )
+                )
+                self.data[raw0].set_eeg_reference(
+                    **ARGS
+                )
+                self.BATCH.logger.info(space0[1]+"Everything seems to be well...")
+
+
+
+
 
 
             def process_events_and_annots(self,raw0="raw0",annots0="annots0",events0="events0"):
@@ -830,7 +932,7 @@ class BatchMNE:
                         str(whoami()),
                 ))
                 self.BATCH.logger.info (space0[1]+"events and annotations data")
-                self.BATCH.logger.info (space0[1]+"processing: " + str(self))
+                self.BATCH.logger.info (space0[1]+"processing: " + repr(str(self)))
                 self.BATCH.logger.info (space0[1]+"raw0: "    + str(raw0))
                 self.BATCH.logger.info (space0[1]+"annots0: "    + str(annots0))
                 self.BATCH.logger.info (space0[1]+"events0: "    + str(events0))
@@ -855,7 +957,7 @@ class BatchMNE:
                         str(whoami()),
                 ))
                 self.BATCH.logger.info (space0[1]+"checking for BAD spans")
-                self.BATCH.logger.info (space0[1]+"processing: " + str(self))
+                self.BATCH.logger.info (space0[1]+"processing: " + repr(str(self)))
                 self.BATCH.logger.info (space0[1]+"raw0: "       + str(raw0))
                 self.BATCH.logger.info (space0[1]+"annots1: "    + str(annots1))
                 of_annot1 = str(self.locs.of_base.with_suffix(".raw0.annots1.bad_spans.csv"))
@@ -884,7 +986,7 @@ class BatchMNE:
                         str(whoami()),
                 ))
                 self.BATCH.logger.info (space0[1]+"applying bandpass filter to data")
-                self.BATCH.logger.info (space0[1]+"processing: " + str(self))
+                self.BATCH.logger.info (space0[1]+"processing: " + repr(str(self)))
                 self.BATCH.logger.info (space0[1]+"raw0: "       + str(raw0))
 
                 l_freq     = self.BATCH.dataBase.setup["filt"]["l_freq"]
@@ -913,7 +1015,7 @@ class BatchMNE:
                         str(whoami()),
                 ))
                 self.BATCH.logger.info (space0[1]+"plotting channels power spectral density")
-                self.BATCH.logger.info (space0[1]+"processing: " + str(self))
+                self.BATCH.logger.info (space0[1]+"processing: " + repr(str(self)))
                 self.BATCH.logger.info (space0[1]+"raw0: "       + str(raw0))
                 self.BATCH.logger.info (space0[1]+"average: "    + str(average))
                 self.BATCH.logger.info (space0[1]+"exclude: "    + str(exclude))
@@ -952,7 +1054,7 @@ class BatchMNE:
                         str(whoami()),
                 ))
                 self.BATCH.logger.info (space0[1]+"plotting raw data timeseries")
-                self.BATCH.logger.info (space0[1]+"processing: " + str(self))
+                self.BATCH.logger.info (space0[1]+"processing: " + repr(str(self)))
                 self.BATCH.logger.info (space0[1]+"raw0: "       + str(raw0))
                 self.BATCH.logger.info (space0[1]+"total: "      + str(total))
                 self.BATCH.logger.info (space0[1]+"exclude: "    + str(exclude))
@@ -995,7 +1097,7 @@ class BatchMNE:
                         str(whoami()),
                 ))
                 self.BATCH.logger.info (space0[1]+"exporting BAD spans annotation data to a CSV file")
-                self.BATCH.logger.info (space0[1]+"processing: " + str(self))
+                self.BATCH.logger.info (space0[1]+"processing: " + repr(str(self)))
                 self.BATCH.logger.info (space0[1]+"raw0: "       + str(raw0))
                 bads_annot1 = [0]+[ii for ii,an in enumerate(self.data[raw0].annotations) if an['description'].lower().startswith("bad")]
                 of_BAD_annot1 = str(self.locs.of_base.with_suffix(".raw0.annots1.bad_spans.csv"))
@@ -1013,7 +1115,7 @@ class BatchMNE:
                         str(whoami()),
                 ))
                 self.BATCH.logger.info (space0[1]+"extract metadata for acquired events")
-                self.BATCH.logger.info (space0[1]+"processing: " + str(self))
+                self.BATCH.logger.info (space0[1]+"processing: " + repr(str(self)))
                 self.BATCH.logger.info (space0[1]+"events0: "    + str(events0))
 
                 self.data[events0]["event_meta"] = pd.DataFrame(
@@ -1086,7 +1188,7 @@ class BatchMNE:
                         str(whoami()),
                 ))
                 self.BATCH.logger.info (space0[1]+"constructing epochs")
-                self.BATCH.logger.info (space0[1]+"processing: " + str(self))
+                self.BATCH.logger.info (space0[1]+"processing: " + repr(str(self)))
                 self.BATCH.logger.info (space0[1]+"raw0: "    + str(raw0))
                 self.BATCH.logger.info (space0[1]+"events0: "    + str(events0))
                 self.BATCH.logger.info (space0[1]+"epochs0: "    + str(epochs0))
@@ -1122,7 +1224,7 @@ class BatchMNE:
                         str(whoami()),
                 ))
                 self.BATCH.logger.info (space0[1]+"checking BAD epochs information file")
-                self.BATCH.logger.info (space0[1]+"processing: " + str(self))
+                self.BATCH.logger.info (space0[1]+"processing: " + repr(str(self)))
                 self.BATCH.logger.info (space0[1]+"epochs0: "    + str(epochs0))
                 bad_epochs = list()
                 of_BAD_epochs   = self.locs.of_BAD_epochs
@@ -1149,7 +1251,7 @@ class BatchMNE:
                         str(whoami()),
                 ))
                 self.BATCH.logger.info (space0[1]+"inspecting epochs (possibly MARKING BAD)")
-                self.BATCH.logger.info (space0[1]+"processing: " + str(self))
+                self.BATCH.logger.info (space0[1]+"processing: " + repr(str(self)))
                 self.BATCH.logger.info (space0[1]+"epochs0: "    + str(epochs0))
 
                 EXCLUDE = self.data[epochs0].info["bads"]  if exclude else []
@@ -1167,7 +1269,7 @@ class BatchMNE:
                         str(whoami()),
                 ))
                 self.BATCH.logger.info (space0[1]+"exporting BAD epochs annotation data to a CSV file")
-                self.BATCH.logger.info (space0[1]+"processing: " + str(self))
+                self.BATCH.logger.info (space0[1]+"processing: " + repr(str(self)))
                 self.BATCH.logger.info (space0[1]+"epochs0: "       + str(epochs0))
                 drop_log = self.data[epochs0].drop_log
                 drop_idx = [this for this in [idx for idx,item in enumerate(drop_log) if item] if drop_log[this][0]=="USER"]
@@ -1187,7 +1289,7 @@ class BatchMNE:
                         str(whoami()),
                 ))
                 self.BATCH.logger.info (space0[1]+"plotting epoch drop log hist")
-                self.BATCH.logger.info (space0[1]+"processing: " + str(self))
+                self.BATCH.logger.info (space0[1]+"processing: " + repr(str(self)))
                 self.BATCH.logger.info (space0[1]+"epochs0: "    + str(epochs0))
 
                 plt.close('all')
@@ -1213,7 +1315,7 @@ class BatchMNE:
                         str(whoami()),
                 ))
                 self.BATCH.logger.info (space0[1]+"plotting epochs AGGREGATED")
-                self.BATCH.logger.info (space0[1]+"processing: " + str(self))
+                self.BATCH.logger.info (space0[1]+"processing: " + repr(str(self)))
                 self.BATCH.logger.info (space0[1]+"epochs0: "    + str(epochs0))
                 plt.close('all')
                 combines = ["gfp","mean",]
@@ -1248,7 +1350,7 @@ class BatchMNE:
                         str(whoami()),
                 ))
                 self.BATCH.logger.info (space0[1]+"plotting epochs BUNDLES")
-                self.BATCH.logger.info (space0[1]+"processing: " + str(self))
+                self.BATCH.logger.info (space0[1]+"processing: " + repr(str(self)))
                 self.BATCH.logger.info (space0[1]+"epochs0: "    + str(epochs0))
                 plt.close('all')
                 elec_idx = OrderedDict()
@@ -1292,7 +1394,7 @@ class BatchMNE:
                         str(whoami()),
                 ))
                 self.BATCH.logger.info (space0[1]+"constructing evoked")
-                self.BATCH.logger.info (space0[1]+"processing: " + str(self))
+                self.BATCH.logger.info (space0[1]+"processing: " + repr(str(self)))
                 self.BATCH.logger.info (space0[1]+"evoked0: "    + str(evoked0))
                 self.BATCH.logger.info (space0[1]+"epochs0: "    + str(epochs0))
                 self.data[evoked0]            = OrderedDict()
@@ -1309,7 +1411,7 @@ class BatchMNE:
                         str(whoami()),
                 ))
                 self.BATCH.logger.info (space0[1]+"constructing evoked with respect to word length")
-                self.BATCH.logger.info (space0[1]+"processing: " + str(self))
+                self.BATCH.logger.info (space0[1]+"processing: " + repr(str(self)))
                 self.BATCH.logger.info (space0[1]+"evoked0: "    + str(evoked0))
                 self.BATCH.logger.info (space0[1]+"epochs0: "    + str(epochs0))
                 self.data[evoked0]             = OrderedDict()
@@ -1327,7 +1429,7 @@ class BatchMNE:
                         str(whoami()),
                 ))
                 self.BATCH.logger.info (space0[1]+"plotting evoked")
-                self.BATCH.logger.info (space0[1]+"processing: " + str(self))
+                self.BATCH.logger.info (space0[1]+"processing: " + repr(str(self)))
                 self.BATCH.logger.info (space0[1]+"evoked0: "    + str(evoked0))
                 plt.close('all')
                 spatial_colors = False
@@ -1384,7 +1486,7 @@ class BatchMNE:
                         str(whoami()),
                 ))
                 self.BATCH.logger.info (space0[1]+"plotting evoked for some data channels accross conditions")
-                self.BATCH.logger.info (space0[1]+"processing: " + str(self))
+                self.BATCH.logger.info (space0[1]+"processing: " + repr(str(self)))
                 self.BATCH.logger.info (space0[1]+"evoked0: "    + str(evoked0))
                 self.BATCH.logger.info (space0[1]+"chans_list: " + str(chans_list))
                 plt.close('all')
@@ -1419,7 +1521,7 @@ class BatchMNE:
                         str(whoami()),
                 ))
                 self.BATCH.logger.info (space0[1]+"running ICA")
-                self.BATCH.logger.info (space0[1]+"processing: " + str(self))
+                self.BATCH.logger.info (space0[1]+"processing: " + repr(str(self)))
                 self.BATCH.logger.info (space0[1]+"epochs0: "    + str(epochs0))
                 self.BATCH.logger.info (space0[1]+"ica0: "    + str(ica0))
 
@@ -1463,7 +1565,7 @@ class BatchMNE:
                         str(whoami()),
                 ))
                 self.BATCH.logger.info (space0[1]+"inspecting ICs")
-                self.BATCH.logger.info (space0[1]+"processing: " + str(self))
+                self.BATCH.logger.info (space0[1]+"processing: " + repr(str(self)))
                 self.BATCH.logger.info (space0[1]+"epochs0: "    + str(epochs0))
                 self.BATCH.logger.info (space0[1]+"ica0: "       + str(ica0))
                 plt.close('all')
@@ -1493,7 +1595,7 @@ class BatchMNE:
                         str(whoami()),
                 ))
                 self.BATCH.logger.info (space0[1]+"plotting ICs")
-                self.BATCH.logger.info (space0[1]+"processing: " + str(self))
+                self.BATCH.logger.info (space0[1]+"processing: " + repr(str(self)))
                 self.BATCH.logger.info (space0[1]+"epochs0: "    + str(epochs0))
                 self.BATCH.logger.info (space0[1]+"ica0: "       + str(ica0))
                 self.BATCH.logger.info (space0[1]+"rejected: "   + str(rejected))
@@ -1532,7 +1634,7 @@ class BatchMNE:
                         str(whoami()),
                 ))
                 self.BATCH.logger.info (space0[1]+"applying ICA and reference projections, and interpolating bads")
-                self.BATCH.logger.info (space0[1]+"processing: " + str(self))
+                self.BATCH.logger.info (space0[1]+"processing: " + repr(str(self)))
                 self.BATCH.logger.info (space0[1]+"ica0: "       + str(ica0))
                 self.BATCH.logger.info (space0[1]+"epochs0: "    + str(epochs0))
                 self.BATCH.logger.info (space0[1]+"epochs1: "    + str(epochs1))
@@ -1572,7 +1674,7 @@ class BatchMNE:
                         str(whoami()),
                 ))
                 self.BATCH.logger.info (space0[1]+"exporting dataset as hickle")
-                self.BATCH.logger.info (space0[1]+"processing: " + str(self))
+                self.BATCH.logger.info (space0[1]+"processing: " + repr(str(self)))
                 # self.of_done = self.of_base.with_suffix(".gzip.hkl")
                 # self.of_done
                 # self.of_base.with_suffix(".gzip.hkl")
@@ -1594,7 +1696,7 @@ class BatchMNE:
                         str(whoami()),
                 ))
                 self.BATCH.logger.info (space0[1]+"exporting evoked as pandas dataframe")
-                self.BATCH.logger.info (space0[1]+"processing: " + str(self))
+                self.BATCH.logger.info (space0[1]+"processing: " + repr(str(self)))
                 self.BATCH.logger.info (space0[1]+"evoked0: "    + str(evoked0))
                 self.BATCH.logger.info (space0[1]+"evoked_name: " + str(evoked_name))
                 ## TODO FIXME add assertion for datatype (EVOKED)
@@ -1640,7 +1742,7 @@ class BatchMNE:
                         str(whoami()),
                 ))
                 self.BATCH.logger.info (space0[1]+"exporting epochs as pandas dataframe")
-                self.BATCH.logger.info (space0[1]+"processing: " + str(self))
+                self.BATCH.logger.info (space0[1]+"processing: " + repr(str(self)))
                 self.BATCH.logger.info (space0[1]+"epochs0: "    + str(epochs0))
                 ## TODO FIXME add assertion for datatype (EPOCHS)
                 df0 = self.data[epochs0].to_data_frame(
