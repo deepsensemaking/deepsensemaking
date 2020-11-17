@@ -679,20 +679,28 @@ class BatchMNE:
                 self.check_BAD_chans_file()
                 self.average_reference_projection()
                 self.process_events_and_annots()
+                # self.check_for_BAD_spans()
                 self.bandpass_filter()
+
+
+                if sys.stdout.isatty(): plt.close("all")
                 self.plot_channels_power_spectral_density(average=False,exclude=False,)
+                if sys.stdout.isatty(): plt.close("all")
+
+
                 self.plot_raw_data_timeseries(total=True,exclude=False,)
                 self.extract_metadata_for_events_acquired()
                 self.construct_epochs()
                 self.check_BAD_epochs_file()
 
+
                 if sys.stdout.isatty(): plt.close("all")
-                self.inspect_epochs()
+                # self.inspect_epochs()
                 if ASK & sys.stdout.isatty(): input(temp_continue)
                 if sys.stdout.isatty(): plt.close("all")
 
-                self.export_BAD_epochs_info()
-                self.plot_epochs_drop_log()
+                # self.export_BAD_epochs_info()
+                # self.plot_epochs_drop_log()
                 self.plot_epochs_using_chan_BUNDLES()
                 self.construct_evoked()
                 self.plot_evoked(evoked0="evoked0")
