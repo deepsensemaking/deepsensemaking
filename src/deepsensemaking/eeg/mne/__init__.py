@@ -11,6 +11,7 @@ import os
 import sys
 import glob
 import pathlib
+import shutil
 
 import json
 import numpy  as np
@@ -692,8 +693,7 @@ class BatchMNE:
 
                 self.export_BAD_epochs_info()
                 self.plot_epochs_drop_log()
-                self.plot_epochs_AGGREGATED()
-                self.plot_epochs_BUNDLES()
+                self.plot_epochs_using_chan_BUNDLES()
                 self.construct_evoked()
                 self.plot_evoked(evoked0="evoked0")
                 self.run_ica()
@@ -705,10 +705,7 @@ class BatchMNE:
 
                 self.apply_projections_and_interpolate_bads()
 
-                self.plot_epochs_AGGREGATED(epochs0="epochs2")
-                if sys.stdout.isatty(): plt.close("all")
-
-                self.plot_epochs_BUNDLES   (epochs0="epochs2")
+                self.plot_epochs_using_chan_BUNDLES(epochs0="epochs2")
                 if sys.stdout.isatty(): plt.close("all")
 
                 self.construct_evoked(evoked0="evoked2",epochs0="epochs2")
@@ -791,7 +788,7 @@ class BatchMNE:
                 self.BATCH.logger.info (space0[1]+"DONE...")
 
 
-            ## TODO TEST ME
+            ## TODO FIXME test the following
             def read_hkl_data(
                     self,
             ):
@@ -1628,9 +1625,9 @@ class BatchMNE:
                         plt.show()
                         of_suff = ""
                         of_suff = ".".join([of_suff,str(whoami()),epochs0])
-                        of_suff = ".".join([of_suff,str(jj)])
+                        of_suff = ".".join([of_suff,"{:03d}".format(jj)]])
                         of_suff = ".".join([of_suff,str(combine)])
-                        of_suff = ".".join([of_suff,str(ii)])
+                        of_suff = ".".join([of_suff,"{:03d}".format(ii)]])
                         of_suff = ".".join([of_suff,str(title_bndl)])
                         of_suff = ".".join([of_suff,"png"])
                         of_name = self.locs.of_base.with_suffix(of_suff)
@@ -1749,7 +1746,7 @@ class BatchMNE:
                     of_suff = ""
                     of_suff = ".".join([of_suff,str(whoami()),evoked0])
                     of_suff = ".".join([of_suff,str(evoked_name)])
-                    of_suff = ".".join([of_suff,str(ii)])
+                    of_suff = ".".join([of_suff,"{:03d}".format(ii)]])
                     of_suff = ".".join([of_suff,str(key)])
                     of_suff = ".".join([of_suff,"png"])
                     of_name = self.locs.of_base.with_suffix(of_suff)
@@ -1795,7 +1792,7 @@ class BatchMNE:
                     of_suff = ""
                     of_suff = ".".join([of_suff,str(whoami()),evoked0])
                     of_suff = ".".join([of_suff,str(evoked_name)])
-                    of_suff = ".".join([of_suff,str(ii)])
+                    of_suff = ".".join([of_suff,"{:03d}".format(ii)]])
                     of_suff = ".".join([of_suff,str(item)])
                     of_suff = ".".join([of_suff,"png"])
                     of_name = self.locs.of_base.with_suffix(of_suff)
@@ -1884,7 +1881,7 @@ class BatchMNE:
 
                     of_suff = ""
                     of_suff = ".".join([of_suff,str(whoami()),epochs0,ica0])
-                    of_suff = ".".join([of_suff,str(ii)])
+                    of_suff = ".".join([of_suff,"{:03d}".format(ii)]])
                     of_suff = ".".join([of_suff,"png"])
                     of_name = self.locs.of_base.with_suffix(of_suff)
                     self.BATCH.logger.info (space0[1]+"of_name: {}".format(repr(str( of_name ))))
@@ -1904,8 +1901,8 @@ class BatchMNE:
                         str(whoami()),
                 ))
                 self.BATCH.logger.info (space0[1]+"importing ICs")
-                self.BATCH.logger.info (space0[1]+"processing: {}".format(repr(str( self         ))))
-                self.BATCH.logger.info (space0[1]+"ica0: {}"      .format(repr(str( ica0         ))))
+                self.BATCH.logger.info (space0[1]+"processing: {}".format(repr(str( self    ))))
+                self.BATCH.logger.info (space0[1]+"ica0: {}"      .format(repr(str( ica0    ))))
                 self.BATCH.logger.info (space0[1]+"of_suff: {}"   .format(repr(str( of_suff ))))
 
                 #of_BAD_comps = self.locs.of_BAD_comps.with_suffix(of_suff)
@@ -1943,11 +1940,11 @@ class BatchMNE:
                         ".".join(self.INSP),
                         str(whoami()),
                 ))
-                self.BATCH.logger.info (space0[1]+"exporting ICs")
-                self.BATCH.logger.info (space0[1]+"processing: {}".format(repr(str( self         ))))
-                self.BATCH.logger.info (space0[1]+"ica0: {}"      .format(repr(str( ica0         ))))
-                self.BATCH.logger.info (space0[1]+"of_suff: {}"   .format(repr(str( of_suff     ))))
-                self.BATCH.logger.info (space0[1]+"default: {}"   .format(repr(str( default     ))))
+                self.BATCH.logger.info (space0[1]+"exporting ICs...")
+                self.BATCH.logger.info (space0[1]+"processing: {}".format(repr(str( self    ))))
+                self.BATCH.logger.info (space0[1]+"ica0: {}"      .format(repr(str( ica0    ))))
+                self.BATCH.logger.info (space0[1]+"of_suff: {}"   .format(repr(str( of_suff ))))
+                self.BATCH.logger.info (space0[1]+"default: {}"   .format(repr(str( default ))))
 
                 of_BAD_comps0 = self.locs.of_BAD_comps
                 of_BAD_comps1 = pathlib.Path(str(self.locs.of_BAD_comps)+of_suff)
@@ -1989,70 +1986,107 @@ class BatchMNE:
                     epochs0  = "epochs0",
                     rejected = True,
                     save     = False,
+                    close    = False,
             ):
                 self.BATCH.logger.info(
                     space0[0]+"RUNNING: {}.{}".format(
                         ".".join(self.INSP),
                         str(whoami()),
                 ))
-                self.BATCH.logger.info (space0[1]+"plotting ICs")
-                self.BATCH.logger.info (space0[1]+"processing: " + repr(str(self)))
-                self.BATCH.logger.info (space0[1]+"epochs0: "    + str(epochs0))
-                self.BATCH.logger.info (space0[1]+"ica0: "       + str(ica0))
-                self.BATCH.logger.info (space0[1]+"rejected: "   + str(rejected))
-                self.BATCH.logger.info (space0[1]+"save: "       + str(save))
+
+                self.BATCH.logger.info (space0[1]+"plotting ICs...")
+                self.BATCH.logger.info (space0[1]+"processing: {}".format(repr(str( self     ))))
+                self.BATCH.logger.info (space0[1]+"ica0: {}"      .format(repr(str( ica0     ))))
+                self.BATCH.logger.info (space0[1]+"epochs0: {}"   .format(repr(str( epochs0  ))))
+                self.BATCH.logger.info (space0[1]+"rejected: {}"  .format(repr(str( rejected ))))
+                self.BATCH.logger.info (space0[1]+"save: {}"      .format(repr(str( save     ))))
+                self.BATCH.logger.info (space0[1]+"close: {}"     .format(repr(str( close    ))))
 
                 exclude = sorted(self.data[ica0].exclude)
                 include = [item for item in list(range(self.data[ica0].n_components)) if not item in exclude]
+
                 picks = exclude if rejected else include
+                picks = exclude + include
+                picks = None
+                picks = list(range(self.data[ica0].n_components))
+
+                ## TODO FIXME add some logic here (or try+catch)
+                ## for more elegant solution to dir handling
+                od_name = self.locs.of_base.with_suffix(".ICs")
+                os.makedirs(od_name,mode=0o700,exist_ok=True,)
+                shutil.rmtree(od_name)
+                os.makedirs(od_name,mode=0o700,exist_ok=True,)
+
                 if picks:
                     figs = self.data[ica0].plot_properties(
                         inst  = self.data[epochs0],
                         picks = picks,
                     )
                     for ii,fig in enumerate(figs):
+                        STATUS = "EXC" if (ii in exclude) else "INC"
                         fig.set_size_inches(16,16)
-                        title_orig = fig.axes[0].get_title()
-                        title_pref = str(self.locs.of_stem)
-                        fig.axes[0].set(title='\n'.join([title_pref, title_orig]))
-                        plt.show()
+                        title_old = fig.axes[0].get_title()
+                        title_new = "{}\n{} {} {} [{:03d}] {}".format(
+                            self.locs.of_stem,
+                            ica0,
+                            epochs0,
+                            title_old,
+                            ii,
+                            STATUS,
+                        )
+                        fig.axes[0].set(title=title_new)
+                        # plt.show()
                         if save:
-                            of_suff  = ""
-                            of_suff += "."+ica0
-                            of_suff += ".plot_properties"
-                            of_suff  = ".".join([of_suff,"exc" if rejected else "inc"])
-                            of_suff += ".0-{:02d}.png".format(ii)
-                            of_name = self.locs.of_base.with_suffix(of_suff)
+                            of_suff = "ic"
+                            of_suff = ".".join([of_suff,str(whoami()),epochs0,ica0])
+                            of_suff = ".".join([of_suff,STATUS])
+                            of_suff = ".".join([of_suff,"{:03d}".format(ii)])
+                            of_suff = ".".join([of_suff,"png"])
+                            ## using a subdir here
+                            of_name = od_name/of_suff
                             self.BATCH.logger.info (space0[1]+"of_name: {}".format(repr(str( of_name ))))
                             fig.savefig(of_name, dpi=fig.dpi,)
 
+                if close:
+                    plt.close("all")
 
 
 
-            def apply_projections_and_interpolate_bads(self,ica0="ica0",epochs0="epochs0",epochs1="epochs1",epochs2="epochs2"):
+
+            def apply_projections_and_interpolate_bads(
+                    self,
+                    ica0    = "ica0",
+                    epochs0 = "epochs0",
+                    epochs1 = "epochs1",
+                    epochs2 = "epochs2",
+            ):
                 self.BATCH.logger.info(
                     space0[0]+"RUNNING: {}.{}".format(
                         ".".join(self.INSP),
                         str(whoami()),
                 ))
                 self.BATCH.logger.info (space0[1]+"applying ICA and reference projections, and interpolating bads")
-                self.BATCH.logger.info (space0[1]+"processing: " + repr(str(self)))
-                self.BATCH.logger.info (space0[1]+"ica0: "       + str(ica0))
-                self.BATCH.logger.info (space0[1]+"epochs0: "    + str(epochs0))
-                self.BATCH.logger.info (space0[1]+"epochs1: "    + str(epochs1))
-                self.BATCH.logger.info (space0[1]+"epochs2: "    + str(epochs2))
+                self.BATCH.logger.info (space0[1]+"processing: {}".format(repr(str( self     ))))
+                self.BATCH.logger.info (space0[1]+"ica0: {}"      .format(repr(str( ica0     ))))
+                self.BATCH.logger.info (space0[1]+"epochs0: {}"   .format(repr(str( epochs0  ))))
+                self.BATCH.logger.info (space0[1]+"epochs1: {}"   .format(repr(str( epochs1  ))))
+                self.BATCH.logger.info (space0[1]+"epochs2: {}"   .format(repr(str( epochs2  ))))
 
+                self.BATCH.logger.info (space0[1]+"loading data for epochs0: {}".format(repr(str(epochs0))))
                 self.data[epochs0].load_data()
 
+                self.BATCH.logger.info (space0[1]+"applying ica INC/EXC on epochs0: {}".format(repr(str(epochs0))))
+                self.BATCH.logger.info (space0[2]+"saving data to epochs1: {}"         .format(repr(str(epochs1))))
                 self.data[epochs1] = self.data[ica0].apply(
                     self.data[epochs0].copy(),
                 )
                 reset_bads = True
                 mode       = "accurate"
+                self.BATCH.logger.info (space0[2]+"reset_bads: {}".format(repr(str( reset_bads ))))
+                self.BATCH.logger.info (space0[2]+"mode: {}"      .format(repr(str( mode       ))))
 
-                self.BATCH.logger.info (space0[1]+"reset_bads: "    + str(reset_bads))
-                self.BATCH.logger.info (space0[1]+"mode: "          + str(mode))
-
+                self.BATCH.logger.info (space0[1]+"applysing projections ETC to data in epochs1: {}".format(repr(str(epochs1))))
+                self.BATCH.logger.info (space0[2]+"saving data to epochs2: {}"         .format(repr(str(epochs2))))
                 self.data[epochs2] = self.data[epochs1].copy(
                 ).apply_proj(
                 ## ).resample(
@@ -2068,10 +2102,13 @@ class BatchMNE:
                 self.BATCH.logger.debug("="*77)
                 self.BATCH.logger.debug(self.data[epochs2].info)
 
+                self.BATCH.logger.info (space0[1]+"DONE")
 
 
 
-            def export_dataset_as_hickle(self,):
+            def export_dataset_as_hickle(
+                    self,
+            ):
                 self.BATCH.logger.info(
                     space0[0]+"RUNNING: {}.{}".format(
                         ".".join(self.INSP),
