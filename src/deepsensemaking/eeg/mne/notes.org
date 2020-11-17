@@ -1,0 +1,84 @@
+
+
+plot_epochs_AGGREGATED and plot_epochs_BUNDLES
+
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var EMACS_BUFFER_DIR=(file-name-directory buffer-file-name) :tangle yes
+
+            def plot_epochs_AGGREGATED(self,epochs0="epochs0"):
+                self.BATCH.logger.info(
+                    space0[0]+"RUNNING: {}.{}".format(
+                        ".".join(self.INSP),
+                        str(whoami()),
+                ))
+                self.BATCH.logger.info (space0[1]+"plotting epochs AGGREGATED")
+                self.BATCH.logger.info (space0[1]+"processing: {}".format(repr(str( self    ))))
+                self.BATCH.logger.info (space0[1]+"epochs0: {}"   .format(repr(str( epochs0 ))))
+
+                combines = ["gfp","mean",]
+                for jj,combine in enumerate(combines):
+                    # .copy().apply_proj()
+                    ## TODO FIXME consider the above projection
+                    figs = self.data[epochs0].plot_image(
+                        show     = False,
+                        group_by = None,
+                        combine  = combine,
+                        sigma    = 0,
+                    )
+                    for ii,fig in enumerate(figs):
+                        fig.set_size_inches(16,8)
+                        title_orig = fig.axes[0].get_title()
+                        title_pref = str(self.locs.of_stem)
+                        fig.axes[0].set(title='\n'.join([title_pref, title_orig]))
+                        plt.show()
+                        of_suff  = ""
+                        of_suff += "."+epochs0
+                        of_suff += ".plot_image.aggAllChans.0-{}-{}-{}.png".format(jj,combine,ii,)
+                        of_name = self.locs.of_base.with_suffix(of_suff)
+                        self.BATCH.logger.info (space0[1]+"of_name: {}".format(repr(str( of_name ))))
+                        fig.savefig(of_name, dpi=fig.dpi,)
+
+
+            def plot_epochs_BUNDLES(self,epochs0="epochs0"):
+                self.BATCH.logger.info(
+                    space0[0]+"RUNNING: {}.{}".format(
+                        ".".join(self.INSP),
+                        str(whoami()),
+                ))
+                self.BATCH.logger.info (space0[1]+"plotting epochs BUNDLES")
+                self.BATCH.logger.info (space0[1]+"processing: " + repr(str(self)))
+                self.BATCH.logger.info (space0[1]+"epochs0: "    + str(epochs0))
+
+                elec_idx = OrderedDict()
+                for key,val in self.BATCH.dataBase.setup["chans"]["bund0"].items():
+                    elec_idx[key] = mne.pick_types(
+                        self.data[epochs0].info,
+                        meg       = False,
+                        eeg       = True,
+                        exclude   = [],
+                        selection = val,
+                    )
+
+                combines = ["gfp","mean",]
+                for jj,combine in enumerate(combines):
+                    figs = self.data[epochs0].plot_image(
+                        show     = False,
+                        group_by = elec_idx,
+                        combine  = combine,
+                        sigma    = 0,
+                    )
+                    for ii,fig in enumerate(figs):
+                        fig.set_size_inches(16,8)
+                        title_orig = fig.axes[0].get_title()
+                        title_pref = str(self.locs.of_stem)
+                        fig.axes[0].set(title='\n'.join([title_pref, title_orig]))
+                        title_bndl = title_orig.partition(" ")[0]
+                        plt.show()
+                        of_suff  = ""
+                        of_suff += "."+epochs0
+                        of_suff += ".plot_image.aggChanBundles.0-{}-{}-{}-{}.png".format(jj,combine,ii,title_bndl,)
+                        of_name = self.locs.of_base.with_suffix(of_suff)
+                        self.BATCH.logger.info (space0[1]+"of_name: {}".format(repr(str( of_name ))))
+                        fig.savefig(of_name, dpi=fig.dpi,)
+
+
+#+END_SRC
