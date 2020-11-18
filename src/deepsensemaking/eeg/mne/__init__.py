@@ -5,17 +5,32 @@
 deepsensemaking (dsm) eeg/mne auxiliary tools
 
 
-TODO
-- add to DataBase a method ".info_loaded()"
-- OR add parameter(s) to ".info()"
-  - "loaded"
-  - "brief"
-  - "list='ica8'" return list containing dataset numbers that have ".data["ica8"] item"
 
 TODO
-- add key="final0" to data in DataBase (and numer of intermediate step related keys)
-- and then we can save to the same file
-- use other file as flag for DONE
+- [ ] add key="final0" to dataBase[IDX].data dictionary (DataBase)
+      - possibly for "Evoked"
+      - that will work alongside with keys previously used
+        for intermediate steps
+      - this way we can keep saving to the same file
+      - use other file as flag for DONE (see below)
+
+- [ ] fully implement "doneSuffix"
+
+- [ ] add of_stem to ICs
+
+- [ ] do epoch rejection in two separate phases (before and after ICA)
+      - reject nothing with "construct_epochs()"
+        or be very generous (like 5000 uV)
+      - next use "drop_BAD_epochs()"
+        - reject = self.BATCH.dataBase.setup["params"]["reject"],
+        - flat   = self.BATCH.dataBase.setup["params"]["flat"],
+
+- [ ] add to DataBase a method ".info_loaded()"
+      - OR add parameter(s) to ".info()"
+        - "loaded"
+        - "brief"
+        - "list='ica8'" return list containing dataset numbers that have ".data["ica8"] item"
+
 
 """
 
@@ -124,6 +139,7 @@ class BatchMNE:
             sourceDir   = "rawdata",
             targetDir   = "derivatives",
             globSuffix  = "sub-*/ses-*/eeg/sub-*.vhdr",
+            doneSuffix  = ".DONE",
             setupFile   = "setup.json",
             stimuliFile = "stimuli.csv",
             verbose     = 0,
@@ -133,6 +149,7 @@ class BatchMNE:
         sourceDir   = pathlib.Path(sourceDir)
         targetDir   = pathlib.Path(targetDir)
         globSuffix  = pathlib.Path(globSuffix)
+        doneSuffix  = pathlib.Path(doneSuffix)
         setupFile   = pathlib.Path(setupFile)
         stimuliFile = pathlib.Path(stimuliFile)
 
@@ -153,6 +170,7 @@ class BatchMNE:
         self.targetDir   = targetDir
         self.loggerDir   = self.targetDir/"logs"
         self.globSuffix  = globSuffix
+        self.doneSuffix  = doneSuffix
         self.globPattern = self.sourceDir/self.globSuffix
         self.setupFile   = setupFile
         self.stimuliFile = stimuliFile
@@ -256,6 +274,7 @@ class BatchMNE:
         out_str += space1[1]+self.objName+".targetDir   = "+repr(str(self.targetDir  ))
         out_str += space1[1]+self.objName+".loggerDir   = "+repr(str(self.loggerDir  ))
         out_str += space1[1]+self.objName+".globSuffix  = "+repr(str(self.globSuffix ))
+        out_str += space1[1]+self.objName+".doneSuffix  = "+repr(str(self.doneSuffix ))
         out_str += space1[1]+self.objName+".globPattern = "+repr(str(self.globPattern))
         out_str += space1[1]+self.objName+".setupFile   = "+repr(str(self.setupFile  ))
         out_str += space1[1]+self.objName+".stimuliFile = "+repr(str(self.stimuliFile))
@@ -461,7 +480,7 @@ class BatchMNE:
                     str(whoami()),
             ))
             for idx,item in enumerate(self.data):
-                if not item.locs.of_done.is_file():
+                if not item.locs.of_data.is_file():
                     self.BATCH.logger.info(space0[1]+"PROCESSING: [{}] {}".format(idx,item,))
                     self.data[idx].JOB_001_001_ica(ASK=False)
 
@@ -481,7 +500,7 @@ class BatchMNE:
             )
             out_str += "\n"
             for idx,item in enumerate(self.data):
-                temp_status = "[    ]" if item.locs.of_done.is_file() else "[TODO]"
+                temp_status = "[    ]" if item.locs.of_data.is_file() else "[TODO]"
                 #out_str += " "*2+str(item.locs.of_stem)+": "+str(len(item.data.keys()))+"\n"
                 out_str += space1[2]+"{:>{}d}: {} {}".format(
                     idx,
@@ -677,7 +696,8 @@ class BatchMNE:
                     self.of_BAD_epochs = self.of_base.with_suffix(".BAD_epochs")
                     self.of_BAD_comps  = self.of_base.with_suffix(".BAD_comps")
                     self.of_rand       = self.of_base.with_suffix(".rand")
-                    self.of_done       = self.of_base.with_suffix(".gzip.hkl")
+                    self.of_data       = self.of_base.with_suffix(".gzip.hkl")
+                    self.of_done       = self.of_base.with_suffix(BATCH.doneSuffix)
 
 
                 def __repr__(self):
@@ -696,6 +716,7 @@ class BatchMNE:
                     out_str += space1[1]+" of_BAD_epochs = {}".format(repr(str( self.of_BAD_epochs )))
                     out_str += space1[1]+"  of_BAD_comps = {}".format(repr(str( self.of_BAD_comps  )))
                     out_str += space1[1]+"       of_rand = {}".format(repr(str( self.of_rand       )))
+                    out_str += space1[1]+"       of_data = {}".format(repr(str( self.of_data       )))
                     out_str += space1[1]+"       of_done = {}".format(repr(str( self.of_done       )))
 
                     return out_str
@@ -866,12 +887,12 @@ class BatchMNE:
                 if_path = self.locs.if_path
                 of_stem = self.locs.of_stem
                 of_base = self.locs.of_base
-                of_done = self.locs.of_done
+                of_data = self.locs.of_data
                 self.BATCH.logger.info (space0[1]+"processing: {}".format(repr(str( self    ))))
                 self.BATCH.logger.info (space0[1]+"if_path: {}"   .format(repr(str( if_path ))))
                 self.BATCH.logger.info (space0[1]+"of_stem: {}"   .format(repr(str( of_stem ))))
                 self.BATCH.logger.info (space0[1]+"of_base: {}"   .format(repr(str( of_base ))))
-                self.BATCH.logger.info (space0[1]+"of_done: {}"   .format(repr(str( of_done ))))
+                self.BATCH.logger.info (space0[1]+"of_data: {}"   .format(repr(str( of_data ))))
                 self.BATCH.logger.info (space0[1]+"raw0: {}"      .format(repr(str( raw0    ))))
                 self.BATCH.logger.info (space0[1]+"EXEC: {}"      .format("mne.io.read_raw_brainvision()"))
                 ARGS = dict(
@@ -917,12 +938,12 @@ class BatchMNE:
                 if_path = self.locs.if_path
                 of_stem = self.locs.of_stem
                 of_base = self.locs.of_base
-                of_done = self.locs.of_done
+                of_data = self.locs.of_data
                 self.BATCH.logger.info (space0[1]+"processing: {}".format(repr(str( self    ))))
                 self.BATCH.logger.info (space0[1]+"if_path: {}"   .format(repr(str( if_path ))))
                 self.BATCH.logger.info (space0[1]+"of_stem: {}"   .format(repr(str( of_stem ))))
                 self.BATCH.logger.info (space0[1]+"of_base: {}"   .format(repr(str( of_base ))))
-                self.BATCH.logger.info (space0[1]+"of_done: {}"   .format(repr(str( of_done ))))
+                self.BATCH.logger.info (space0[1]+"of_data: {}"   .format(repr(str( of_data ))))
                 self.BATCH.logger.info (space0[1]+"EXE:     {}"   .format("hkl.load()"))
                 ARGS = dict(
                     fileobj = if_path,
@@ -1492,6 +1513,8 @@ class BatchMNE:
                     meta1   = "meta1",
                     time1   = "time1",
                     desc1   = "desc1",
+                    reject  = None,
+                    flat    = None,
             ):
                 self.BATCH.logger.info(
                     space0[0]+"RUNNING: {}.{}".format(
@@ -1505,6 +1528,15 @@ class BatchMNE:
                 self.BATCH.logger.info (space0[1]+"meta1: {}"     .format(repr(str( meta1   ))))
                 self.BATCH.logger.info (space0[1]+"time1: {}"     .format(repr(str( time1   ))))
                 self.BATCH.logger.info (space0[1]+"desc1: {}"     .format(repr(str( desc1   ))))
+
+                if reject == "setup":
+                    reject = self.BATCH.dataBase.setup["params"]["reject"]
+
+                if flat == "setup":
+                    flat = self.BATCH.dataBase.setup["params"]["flat"]
+
+                self.BATCH.logger.info (space0[1]+"reject: {}".format(repr(str( reject ))))
+                self.BATCH.logger.info (space0[1]+"flat: {}"  .format(repr(str( flat   ))))
 
                 exclude = self.data[raw0].info["bads"] + self.BATCH.dataBase.setup["chans"]["refs"]
                 exclude = self.BATCH.dataBase.setup["chans"]["refs"]
@@ -1527,9 +1559,9 @@ class BatchMNE:
                     baseline = (None, 0),
                     picks    = picks,
                     preload  = False, ## TODO FIXME CHECKUP THAT
-                    reject_by_annotation=True,
-                    reject   = self.BATCH.dataBase.setup["params"]["reject"],
-                    flat     = self.BATCH.dataBase.setup["params"]["flat"],
+                    reject_by_annotation = True,
+                    reject   = reject,
+                    flat     = flat,
                     decim    = 5,
                 )
                 self.BATCH.logger.info(
@@ -1610,6 +1642,9 @@ class BatchMNE:
             def drop_BAD_epochs(
                     self,
                     epochs0 = "epochs0",
+                    reject  = "setup",
+                    flat    = "setup",
+
             ):
                 self.BATCH.logger.info(
                     space0[0]+"RUNNING: {}.{}".format(
@@ -1620,10 +1655,29 @@ class BatchMNE:
                 self.BATCH.logger.info (space0[1]+"processing: {}".format(repr(str( self    ))))
                 self.BATCH.logger.info (space0[1]+"epochs0: {}"   .format(repr(str( epochs0 ))))
 
-                self.data[epochs0].drop_bad()
-                ## TODO FIXME check if this truely operates inplace (in-place)
+                if reject == "setup":
+                    reject = self.BATCH.dataBase.setup["params"]["reject"]
 
-                self.BATCH.logger.info (space0[1]+"DONE")
+                if flat == "setup":
+                    flat = self.BATCH.dataBase.setup["params"]["flat"]
+
+                self.BATCH.logger.info (space0[1]+"reject: {}".format(repr(str( reject ))))
+                self.BATCH.logger.info (space0[1]+"flat: {}"  .format(repr(str( flat   ))))
+
+                ARGS = dict(
+                    reject   = reject,
+                    flat     = flat,
+                )
+                self.BATCH.logger.info(
+                    space0[2]+"ARGS:\n{}".format(
+                        str_dict(ARGS,"   ARGS",max_level=0,max_len=77,)
+                    )
+                )
+                self.data[epochs0].drop_bad(
+                      **ARGS,
+                )
+                self.BATCH.logger.info (space0[1]+"DONE with epochs dropping...")
+                ## TODO FIXME check if this truely operates inplace (in-place)
 
 
 
@@ -2180,12 +2234,12 @@ class BatchMNE:
                             (fig or plt).show()
 
                         if saveFig:
-                            of_suff = "ic"
+                            of_suff = self.locs.of_stem
                             of_suff = ".".join([of_suff,str(whoami()),epochs0,ica0])
                             of_suff = ".".join([of_suff,STATUS])
                             of_suff = ".".join([of_suff,"{:03d}".format(ii)])
                             of_suff = ".".join([of_suff,"png"])
-                            ## using a subdir here
+                            ## CAUTION: using a subdir here
                             of_name = od_name/of_suff
                             self.BATCH.logger.info (space0[1]+"of_name: {}".format(repr(str( of_name ))))
                             fig.savefig(of_name, dpi=fig.dpi,)
@@ -2258,12 +2312,12 @@ class BatchMNE:
                 ))
                 self.BATCH.logger.info (space0[1]+"exporting dataset as hickle")
                 self.BATCH.logger.info (space0[1]+"processing: " + repr(str(self)))
-                # self.of_done = self.of_base.with_suffix(".gzip.hkl")
-                # self.of_done
+                # self.of_data = self.of_base.with_suffix(".gzip.hkl")
+                # self.of_data
                 # self.of_base.with_suffix(".gzip.hkl")
                 hkl.dump(
                     self.data,
-                    self.locs.of_done,
+                    self.locs.of_data,
                     mode="w",
                     compression="gzip",
                 )
