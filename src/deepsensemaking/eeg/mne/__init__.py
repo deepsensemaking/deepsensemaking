@@ -7,16 +7,16 @@ deepsensemaking (dsm) eeg/mne auxiliary tools
 
 
 TODO
-- [ ] add key="final0" to dataBase[IDX].data dictionary (DataBase)
+- [ ] add key="final0" OR key="latest0" to dataBase[IDX].data dictionary (DataBase)
       - possibly for "Evoked"
       - that will work alongside with keys previously used
         for intermediate steps
       - this way we can keep saving to the same file
       - use other file as flag for DONE (see below)
 
-- [ ] fully implement "doneSuffix"
+- [X] fully implement "doneSuffix"
 
-- [ ] add of_stem to ICs
+- [X] add of_stem to ICs
 
 - [ ] do epoch rejection in two separate phases (before and after ICA)
       - reject nothing with "construct_epochs()"
@@ -31,6 +31,7 @@ TODO
         - "brief"
         - "list='ica8'" return list containing dataset numbers that have ".data["ica8"] item"
 
+- [ ] add carpet plot with channel-wise smoothing
 
 """
 
@@ -149,7 +150,7 @@ class BatchMNE:
         sourceDir   = pathlib.Path(sourceDir)
         targetDir   = pathlib.Path(targetDir)
         globSuffix  = pathlib.Path(globSuffix)
-        doneSuffix  = pathlib.Path(doneSuffix)
+        # doneSuffix  = pathlib.Path(doneSuffix)
         setupFile   = pathlib.Path(setupFile)
         stimuliFile = pathlib.Path(stimuliFile)
 
@@ -473,16 +474,18 @@ class BatchMNE:
 
 
 
-        def JOB_001_001_ica(self):
+        def JOB_DS0(self):
             self.BATCH.logger.info(
                 space0[0]+"RUNNING: {}.{}".format(
                     ".".join(self.INSP),
                     str(whoami()),
             ))
+            plt.ioff()
+            ASK = False
             for idx,item in enumerate(self.data):
                 if not item.locs.of_data.is_file():
                     self.BATCH.logger.info(space0[1]+"PROCESSING: [{}] {}".format(idx,item,))
-                    self.data[idx].JOB_001_001_ica(ASK=False)
+                    self.data[idx].JOB_DS0(ASK=ASK)
 
 
 
@@ -500,7 +503,7 @@ class BatchMNE:
             )
             out_str += "\n"
             for idx,item in enumerate(self.data):
-                temp_status = "[    ]" if item.locs.of_data.is_file() else "[TODO]"
+                temp_status = "[    ]" if item.locs.of_done.is_file() else "[TODO]"
                 #out_str += " "*2+str(item.locs.of_stem)+": "+str(len(item.data.keys()))+"\n"
                 out_str += space1[2]+"{:>{}d}: {} {}".format(
                     idx,
@@ -749,71 +752,101 @@ class BatchMNE:
 
 
 
-            def JOB_001_001_ica(self,ASK=True):
+            def JOB_DS0(self,ASK=True):
                 temp_continue = "\nPress any propper key to continue... "
 
                 self.info()
-                ### if ASK & sys.stdout.isatty(): input(temp_continue)
+                if ASK & sys.stdout.isatty(): input(temp_continue)
 
+
+                self.BATCH.logger.info("read RAW data")
                 self.read_raw_data()
+                self.BATCH.logger.info("check consistency in number of chans")
                 self.check_chans_number()
+                self.BATCH.logger.info("check for BAD chans FILE")
                 self.check_BAD_chans_file()
+                self.BATCH.logger.info("add average reference projection")
                 self.average_reference_projection()
+                self.BATCH.logger.info("inital processing of events and annotations")
                 self.process_events_and_annots()
 
+                ## currently BAD spans checkup is deprecated,
+                ## instead in the following steps epoched data
+                ## will be cleaned using ICA and amplitude thresholds...
 
-                ### self.check_for_BAD_spans()
+                # self.BATCH.logger.info("checking for bad spans")
+                # self.check_for_BAD_spans_file()
 
-
-                self.bandpass_filter()
+                self.BATCH.logger.info("bandpass filter RAW data")
+                self.bandpass_filter(raw0="raw0")
 
 
                 if sys.stdout.isatty(): plt.close("all")
+                self.BATCH.logger.info("plot power spectral density for all chans")
                 self.plot_channels_power_spectral_density(average=False,exclude=False,)
+                if ASK & sys.stdout.isatty(): input(temp_continue)
                 if sys.stdout.isatty(): plt.close("all")
 
 
                 if sys.stdout.isatty(): plt.close("all")
+                self.BATCH.logger.info("plot RAW data timeseries")
                 self.plot_raw_data_timeseries(total=True,exclude=False,)
-                ### if ASK & sys.stdout.isatty(): input(temp_continue)
                 if sys.stdout.isatty(): plt.close("all")
 
+                ## currently manual inspection of RAW (continous) data is deprecated
+                ## instead in the following steps epoched data
+                ## will be cleaned using ICA and amplitude thresholds...
+                ## ALSO no BAD spans data should be red from or written
 
-                ### self.export_BAD_spans_info()
+                # if sys.stdout.isatty(): plt.close("all")
+                # self.BATCH.logger.info("plot RAW data timeseries for MANUAL INSPECTION")
+                # self.plot_raw_data_timeseries(total=False,exclude=False,)
+                # if ASK & sys.stdout.isatty(): input(temp_continue)
+                # if sys.stdout.isatty(): plt.close("all")
+
+                # self.BATCH.logger.info("save BAD spans after MANUAL INSPECTION ")
+                # self.export_BAD_spans_info()
 
 
+                self.BATCH.logger.info("extract metadata for events acquired")
                 self.extract_metadata_for_events_acquired()
-                self.construct_epochs()
+
+                self.BATCH.logger.info("construct epochs (preload=False)")
+                self.BATCH.logger.info("- no rejections now")
+                self.construct_epochs(
+                    raw0    = "raw0",
+                    events0 = "events0",
+                    epochs0 = "epochs0",
+                    meta1   = "meta1",
+                    time1   = "time1",
+                    desc1   = "desc1",
+                    reject  = None,
+                    flat    = None,
+                    preload = False,
+                )
+
+                self.BATCH.logger.info("check BAD epochs file (as selected by USER)")
                 self.check_BAD_epochs_file()
 
-
                 if sys.stdout.isatty(): plt.close("all")
-                ### self.inspect_epochs()
-                ### if ASK & sys.stdout.isatty(): input(temp_continue)
-                if sys.stdout.isatty(): plt.close("all")
-                ### self.export_BAD_epochs_info()
-                self.drop_BAD_epochs()
-                self.plot_epochs_drop_log()
-
-
-                if sys.stdout.isatty(): plt.close("all")
-                self.plot_epochs_using_chan_BUNDLES(epochs0="epochs0")
+                self.BATCH.logger.info("plot epochs using channel BUNDLES")
+                self.plot_epochs_using_chan_BUNDLES_carpet(epochs0="epochs0")
                 if sys.stdout.isatty(): plt.close("all")
 
 
-                self.construct_evoked(evoked0="evoked0",epochs0="epochs0")
-                self.construct_evoked_resp_word_length(evoked0="evoked0",epochs0="epochs0")
+                self.construct_evoked_WORD_SET(evoked0="evoked0",epochs0="epochs0")
+                self.construct_evoked_WORD_LEN(evoked0="evoked0",epochs0="epochs0")
 
 
                 if sys.stdout.isatty(): plt.close("all")
-                self.plot_evoked(evoked0="evoked0",evoked_name="default",)
-                self.plot_evoked(evoked0="evoked0",evoked_name="word_len",)
+                self.plot_evoked_JOINT(evoked0="evoked0",evoked_name="word_set",)
+                self.plot_evoked_JOINT(evoked0="evoked0",evoked_name="word_len",)
                 if sys.stdout.isatty(): plt.close("all")
 
                 if sys.stdout.isatty(): plt.close("all")
-                chans_list =  [ "C3" , "C4" , "F3" , "F4" , "PO3" , "PO4" , ]
-                self.plot_evoked_chans(evoked0="evoked0",chans_list=chans_list,evoked_name="default")
-                self.plot_evoked_chans(evoked0="evoked0",chans_list=chans_list,evoked_name="word_len")
+                chans_list = ["C3","C4","F3","F4","PO3","PO4",]
+                self.plot_evoked_CHANS(evoked0="evoked0",chans_list=chans_list,evoked_name="word_set")
+                self.plot_evoked_CHANS(evoked0="evoked0",chans_list=chans_list,evoked_name="word_len")
                 if sys.stdout.isatty(): plt.close("all")
 
 
@@ -828,6 +861,28 @@ class BatchMNE:
                 if sys.stdout.isatty(): plt.close("all")
 
 
+
+
+
+                if sys.stdout.isatty(): plt.close("all")
+                # self.inspect_epochs()
+                # if ASK & sys.stdout.isatty(): input(temp_continue)
+                if sys.stdout.isatty(): plt.close("all")
+                ### self.export_BAD_epochs_info()
+                self.drop_BAD_epochs()
+                self.plot_epochs_drop_log()
+
+
+
+
+
+
+
+
+
+
+
+
                 if sys.stdout.isatty(): plt.close("all")
                 self.plot_components()
                 if sys.stdout.isatty(): plt.close("all")
@@ -837,26 +892,26 @@ class BatchMNE:
 
 
                 if sys.stdout.isatty(): plt.close("all")
-                self.plot_epochs_using_chan_BUNDLES(epochs0="epochs2")
+                self.plot_epochs_using_chan_BUNDLES_carpet(epochs0="epochs2")
                 if sys.stdout.isatty(): plt.close("all")
 
 
-                self.construct_evoked(evoked0="evoked2",epochs0="epochs2")
-                self.construct_evoked_resp_word_length(evoked0="evoked2",epochs0="epochs2")
+                self.construct_evoked_WORD_SET(evoked0="evoked2",epochs0="epochs2")
+                self.construct_evoked_WORD_LEN(evoked0="evoked2",epochs0="epochs2")
 
 
                 if sys.stdout.isatty(): plt.close("all")
-                self.plot_evoked(evoked0="evoked2",evoked_name="default",)
-                self.plot_evoked(evoked0="evoked2",evoked_name="word_len",)
+                self.plot_evoked_JOINT(evoked0="evoked2",evoked_name="word_set",)
+                self.plot_evoked_JOINT(evoked0="evoked2",evoked_name="word_len",)
                 if sys.stdout.isatty(): plt.close("all")
 
                 if sys.stdout.isatty(): plt.close("all")
                 chans_list =  [ "C3" , "C4" , "F3" , "F4" , "PO3" , "PO4" , ]
-                self.plot_evoked_chans(evoked0="evoked2",chans_list=chans_list,evoked_name="default",)
-                self.plot_evoked_chans(evoked0="evoked2",chans_list=chans_list,evoked_name="word_len",)
+                self.plot_evoked_CHANS(evoked0="evoked2",chans_list=chans_list,evoked_name="word_set",)
+                self.plot_evoked_CHANS(evoked0="evoked2",chans_list=chans_list,evoked_name="word_len",)
                 if sys.stdout.isatty(): plt.close("all")
 
-                ### self.export_evoked_as_dataframe(evoked0="evoked2",evoked_name="default",df0_name="dfEvoked2",)
+                ### self.export_evoked_as_dataframe(evoked0="evoked2",evoked_name="word_set",df0_name="dfEvoked2",)
                 ### self.export_epochs_as_dataframe(epochs0="epochs2",events0="events0",df0_name="dfEpochs2",)
 
                 self.export_dataset_as_hickle()
@@ -1168,7 +1223,7 @@ class BatchMNE:
 
 
 
-            def check_for_BAD_spans(
+            def check_for_BAD_spans_file(
                     self,
                     raw0    = "raw0",
                     annots1 = "annots1",
@@ -1515,6 +1570,7 @@ class BatchMNE:
                     desc1   = "desc1",
                     reject  = None,
                     flat    = None,
+                    preload = False,
             ):
                 self.BATCH.logger.info(
                     space0[0]+"RUNNING: {}.{}".format(
@@ -1751,7 +1807,7 @@ class BatchMNE:
 
 
 
-            def plot_epochs_using_chan_BUNDLES(
+            def plot_epochs_using_chan_BUNDLES_carpet(
                     self,
                     epochs0 = "epochs0",
                     showFig = False,
@@ -1821,7 +1877,7 @@ class BatchMNE:
 
 
 
-            def construct_evoked(
+            def construct_evoked_WORD_SET(
                     self,
                     evoked0 = "evoked0",
                     epochs0 = "epochs0",
@@ -1837,17 +1893,17 @@ class BatchMNE:
                 self.BATCH.logger.info (space0[1]+"epochs0: {}"   .format(repr(str( epochs0 ))))
 
                 self.data[evoked0]            = OrderedDict()
-                self.data[evoked0]["default"] = OrderedDict()
-                self.data[evoked0]["default"]["all_in"] = self.data[epochs0].average()
-                for ii,(key,val) in enumerate(self.BATCH.dataBase.setup["queries"]["default"].items()):
+                self.data[evoked0]["word_set"] = OrderedDict()
+                self.data[evoked0]["word_set"]["all_in"] = self.data[epochs0].average()
+                for ii,(key,val) in enumerate(self.BATCH.dataBase.setup["queries"]["word_set"].items()):
                     self.BATCH.logger.debug(space0[1]+"{}: {}"   .format(repr(str(key)),repr(str(val))))
-                    self.data[evoked0]["default"][key]  = self.data[epochs0][val].average()
+                    self.data[evoked0]["word_set"][key]  = self.data[epochs0][val].average()
                 self.BATCH.logger.info (space0[1]+"DONE...")
 
 
 
 
-            def construct_evoked_resp_word_length(
+            def construct_evoked_WORD_LEN(
                     self,
                     evoked0 = "evoked0",
                     epochs0 = "epochs0",
@@ -1864,7 +1920,6 @@ class BatchMNE:
                 # self.data[evoked0]             = OrderedDict()
                 self.data[evoked0]["word_len"] = OrderedDict()
                 query = 'LEN == {}'
-
                 for n_letters in sorted( self.data[epochs0].metadata["LEN"].unique()):
                     self.BATCH.logger.debug(space0[1]+"n_letters: {}"   .format(repr(str(n_letters))))
                     self.data[evoked0]["word_len"][str(n_letters)] = self.data[epochs0][query.format(n_letters)].average()
@@ -1872,12 +1927,12 @@ class BatchMNE:
 
 
 
-            def plot_evoked(
+            def plot_evoked_JOINT(
                     self,
                     evoked0           = "evoked0",
                     apply_projections = True,
                     interpolate_bads  = True,
-                    evoked_name       = "default",
+                    evoked_name       = "word_set",
                     showFig           = False,
             ):
                 self.BATCH.logger.info(
@@ -1943,11 +1998,11 @@ class BatchMNE:
 
 
 
-            def plot_evoked_chans(
+            def plot_evoked_CHANS(
                     self,
                     evoked0     = "evoked0",
                     chans_list  = [],
-                    evoked_name = "default",
+                    evoked_name = "word_set",
                     showFig     = False,
 
             ):
@@ -2328,7 +2383,7 @@ class BatchMNE:
 
 
 
-            def export_evoked_as_dataframe(self,evoked0="evoked0",evoked_name="default",df0_name=None,):
+            def export_evoked_as_dataframe(self,evoked0="evoked0",evoked_name="word_set",df0_name=None,):
                 self.BATCH.logger.info(
                     space0[0]+"RUNNING: {}.{}".format(
                         ".".join(self.INSP),
