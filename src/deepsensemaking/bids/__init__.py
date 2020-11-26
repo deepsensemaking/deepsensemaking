@@ -19,6 +19,7 @@ def get_bids_prop( if_name, prop ):
     print(get_bids_prop(if_name=ex_fname,prop="sub",))
 
     """
+    if_name = str(if_name)
     # r = re.compile( prop + r"-(.*?)(?:_+)" )
     # r = re.compile( prop + r"-(.*?)(?:$)" )
     # r = re.compile( prop + r"-(.*?)(?:_+|$)" )
