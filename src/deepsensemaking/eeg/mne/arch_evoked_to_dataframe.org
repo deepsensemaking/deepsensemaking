@@ -1,0 +1,27 @@
+
+
+
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var EMACS_BUFFER_DIR=(file-name-directory buffer-file-name) :tangle yes
+                self.BATCH.logger.info (space0[1]+"DIMS: " + str(df0.shape))
+                with pd.option_context("display.max_colwidth"         ,  200):
+                    with pd.option_context("display.width"            , 3500):
+                        with pd.option_context("display.max_rows"     ,   45):
+                            with pd.option_context("display.min_rows" ,   45):
+                                self.BATCH.logger.info (space0[1]+"SAMP:\n" + str(df0.sample(n=12).sort_index()))
+
+                of_suff  = ""
+                of_suff += "."+evoked0
+                of_suff += "."+evoked_name
+                of_suff += ".pandas_evoked.csv"
+                of_name = self.locs.of_base.with_suffix(of_suff)
+
+                df0.to_csv(
+                    of_name,
+                    index = False,
+                )
+
+                if evoked0_df is not None:
+                    self.data[evoked0_df] = df0
+
+
+#+END_SRC

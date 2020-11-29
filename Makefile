@@ -20,3 +20,25 @@ install:
 
 public:
 	@python3 -m twine upload dist/*.whl
+
+## on buka2 use:
+## pip install git+ssh://jiko@stardust/home/jiko/cc/dev/py/major/2020-05-17__deepsensemaking/dsm_repo
+## PROBLEM - no updates even with "--no-cache-dir" option
+
+rsync-to-buka2:
+	rsync \
+	  --recursive \
+	  --links \
+	  --perms \
+	  --times \
+	  --group \
+	  --owner \
+	  --devices \
+	  --specials \
+	  --itemize-changes \
+	  --human-readable \
+	  --stats \
+	  --progress \
+	  --rsh=ssh \
+	  "/home/jiko/cc/dev/py/major/2020-05-17__deepsensemaking/dsm_repo/" \
+	  "eben@buka2:/home/eben/dsm_repo/"
