@@ -1121,7 +1121,7 @@ class BatchMNE:
                 if sys.stdout.isatty(): plt.close("all")
                 self.plot_evoked_JOINT(
                     evoked0           = "evoked0",
-                    evoked_name       = "word_set",
+                    quest0       = "word_set",
                     apply_projections = True,
                     interpolate_bads  = True,
                     showFig           = False,
@@ -1129,7 +1129,7 @@ class BatchMNE:
                 )
                 self.plot_evoked_JOINT(
                     evoked0           = "evoked0",
-                    evoked_name       = "word_len",
+                    quest0       = "word_len",
                     apply_projections = True,
                     interpolate_bads  = True,
                     showFig           = False,
@@ -1141,14 +1141,14 @@ class BatchMNE:
                 chans0 = ["C3","C4","F3","F4","PO3","PO4","O1","O2",]
                 self.plot_evoked_COMPARE(
                     evoked0     = "evoked0",
-                    evoked_name = "word_set",
+                    quest0 = "word_set",
                     chans0  = chans0,
                     showFig     = False,
                     suffFig     = "",
                 )
                 self.plot_evoked_COMPARE(
                     evoked0     = "evoked0",
-                    evoked_name = "word_len",
+                    quest0 = "word_len",
                     chans0  = chans0,
                     showFig     = False,
                     suffFig     = "",
@@ -1156,7 +1156,7 @@ class BatchMNE:
                 chans0 = ['Fz', 'Cz', 'Pz', 'Oz', 'CPz', 'POz', 'FCz']
                 self.plot_evoked_COMPARE(
                     evoked0     = "evoked0",
-                    evoked_name = "word_set",
+                    quest0 = "word_set",
                     chans0  = chans0,
                     showFig     = False,
                     suffFig     = "",
@@ -1171,7 +1171,7 @@ class BatchMNE:
                 ]
                 self.plot_evoked_COMPARE(
                     evoked0     = "evoked0",
-                    evoked_name = "word_set",
+                    quest0 = "word_set",
                     chans0  = chans0,
                     showFig     = False,
                     suffFig     = "",
@@ -1213,7 +1213,7 @@ class BatchMNE:
 
                 self.evoked_to_dataframe(
                     evoked0      = "evoked0",
-                    evoked_name  = "word_set",
+                    quest0  = "word_set",
                     df0_evoked0  = "df0_evoked0_word_set",
                 )
 
@@ -1302,17 +1302,17 @@ class BatchMNE:
 
 
                 if sys.stdout.isatty(): plt.close("all")
-                self.plot_evoked_JOINT(evoked0="evoked2",evoked_name="word_set",)
-                self.plot_evoked_JOINT(evoked0="evoked2",evoked_name="word_len",)
+                self.plot_evoked_JOINT(evoked0="evoked2",quest0="word_set",)
+                self.plot_evoked_JOINT(evoked0="evoked2",quest0="word_len",)
                 if sys.stdout.isatty(): plt.close("all")
 
                 if sys.stdout.isatty(): plt.close("all")
                 chans0 =  ["C3","C4","F3","F4","PO3","PO4",]
-                self.plot_evoked_COMPARE(evoked0="evoked2",chans0=chans0,evoked_name="word_set",)
-                self.plot_evoked_COMPARE(evoked0="evoked2",chans0=chans0,evoked_name="word_len",)
+                self.plot_evoked_COMPARE(evoked0="evoked2",chans0=chans0,quest0="word_set",)
+                self.plot_evoked_COMPARE(evoked0="evoked2",chans0=chans0,quest0="word_len",)
                 if sys.stdout.isatty(): plt.close("all")
 
-                ### self.export_evoked_as_dataframe(evoked0="evoked2",evoked_name="word_set",df0_name="dfEvoked2",)
+                ### self.export_evoked_as_dataframe(evoked0="evoked2",quest0="word_set",df0_name="dfEvoked2",)
                 ### self.export_epochs_as_dataframe(epochs0="epochs2",events0="events0",df0_name="dfEpochs2",)
 
                 self.write_hkl()
@@ -2396,10 +2396,11 @@ class BatchMNE:
 
             def extract_PEAKS_from_evoked(
                     self,
-                    peaks0,
-                    evoked0,
-                    chans0,
-                    bunds0,
+                    peaks0,     # "peaks0"
+                    evoked0,    # "evoked2"
+                    chans0,     # self.BATCH.dataBase.setup["chans"]["bund1"]["B1"]
+                    bunds0,     # self.BATCH.dataBase.setup["chans"]["bund0"].items()
+                    timespans0, # list(DS0.dataBase.setup["time"]["spans0"].values())
             ):
                 self.BATCH.logger.info(
                     space0[0]+"RUNNING: {}.{}".format(
@@ -2407,14 +2408,75 @@ class BatchMNE:
                         str(whoami()),
                 ))
                 self.BATCH.logger.info (space0[1]+"extracting peaks from evoked for some data channels accross conditions")
-                self.BATCH.logger.info (space0[1]+"processing: {}" .format(repr(str( self        ))))
-                self.BATCH.logger.info (space0[1]+"peaks0: {}"     .format(repr(str( peaks0      ))))
-                self.BATCH.logger.info (space0[1]+"evoked0: {}"    .format(repr(str( evoked0     ))))
-                self.data[peaks0] = []
+                self.BATCH.logger.info (space0[1]+"processing: {}".format(repr(str( self        ))))
+                self.BATCH.logger.info (space0[1]+"peaks0: {}"    .format(repr(str( peaks0      ))))
+                self.BATCH.logger.info (space0[1]+"evoked0: {}"   .format(repr(str( evoked0     ))))
+                self.BATCH.logger.info (space0[1]+"chans0: {}"    .format(repr(str( chans0      ))))
+                self.BATCH.logger.info (space0[1]+"bunds0: {}"    .format(repr(str( bunds0      ))))
+                self.BATCH.logger.info (space0[1]+"timespans0: {}".format(repr(str( timespans0  ))))
+                self.data[peaks0] = None
                 df0 = pd.DataFrame(
                     [],
-                    columns=["evoked0","evoked_name","key0","chan0","tmin0","tmax0","mode0","chanX","latX","valX"],
+                    columns=["evoked0","quest0","cond0","chan0","tmin0","tmax0","mode0","chanX","latX","valX"],
                 )
+                for quest0 in self.data[evoked0].keys():
+                    self.BATCH.logger.info (space0[1]+"PROC quest0: {}".format(repr(str( quest0 ))))
+                    for idx0,(cond0,val0) in enumerate(self.data[evoked0][quest0].items()):
+                        self.BATCH.logger.info (space0[2]+"cond0: {}".format(repr(str( cond0 ))))
+                        for chan0 in chans0:
+                            self.BATCH.logger.info (space0[2]+"chan0: {}".format(repr(str( chan0 ))))
+                            for timespan0 in timespans0:
+                                tmin0 = timespan0[0]
+                                tmax0 = timespan0[1]
+                                for mode0 in ["pos","neg"]:
+                                    chanX,latX,valX = val0.copy().pick(chan0).get_peak(
+                                        ch_type          = "eeg",
+                                        tmin             = tmin0,
+                                        tmax             = tmax0,
+                                        mode             = mode0,
+                                        return_amplitude = True,
+                                    )
+                                    df1 = pd.DataFrame(
+                                        [[evoked0,quest0,cond0,chan0,tmin0,tmax0,mode0,chanX,latX,valX]],
+                                        columns=["evoked0","quest0","cond0","chan0","tmin0","tmax0","mode0","chanX","latX","valX"],
+                                    )
+                                    df1["valX"] = df1["valX"]*1e6
+                                    df0 = df0.append(df1)
+
+                        inst0     = dc(val0)
+                        bunds0idx = OrderedDict()
+                        for key2,val2 in bunds0:
+                            self.BATCH.logger.info (space0[2]+"bunds0: {}".format(repr(str( bunds0 ))))
+                            self.BATCH.logger.info (space0[2]+"bunds0 key2: {}".format(repr(str( key2 ))))
+                            self.BATCH.logger.info (space0[2]+"bunds0 key2: {}".format(repr(str( val2 ))))
+                            bunds0idx[key2] = mne.pick_channels(inst0.info['ch_names'], val2 )
+                        inst1 = mne.channels.combine_channels(
+                            inst   = inst0,
+                            groups = bunds0idx,
+                            method = "mean",
+                        )
+                        for chan0 in inst1.info["ch_names"]:
+                            self.BATCH.logger.info (space0[2]+"chan0: {}".format(repr(str( chan0 ))))
+                            for timespan0 in timespans0:
+                                tmin0 = timespan0[0]
+                                tmax0 = timespan0[1]
+                                for mode0 in ["pos","neg"]:
+                                    chanX,latX,valX = inst1.copy().pick(chan0).get_peak(
+                                        ch_type          = "eeg",
+                                        tmin             = tmin0,
+                                        tmax             = tmax0,
+                                        mode             = mode0,
+                                        return_amplitude = True,
+                                    )
+                                    df1 = pd.DataFrame(
+                                        [[evoked0,quest0,cond0,chan0,tmin0,tmax0,mode0,chanX,latX,valX]],
+                                        columns=["evoked0","quest0","cond0","chan0","tmin0","tmax0","mode0","chanX","latX","valX"],
+                                    )
+                                    df1["valX"] = df1["valX"]*1e6
+                                    df0 = df0.append(df1)
+
+
+
 
 
             def construct_evoked_WORD_LEN(
@@ -2444,7 +2506,7 @@ class BatchMNE:
             def plot_evoked_JOINT(
                     self,
                     evoked0,
-                    evoked_name,
+                    quest0,
                     apply_projections = True,
                     interpolate_bads  = True,
                     showFig           = False,
@@ -2468,7 +2530,7 @@ class BatchMNE:
                 times += self.BATCH.dataBase.setup["time"]["means0"].values()
                 # times += list(sum(self.BATCH.dataBase.setup["time"]["spans0"].values(), ()))
                 times = sorted(times)
-                for ii,(key,evoked) in enumerate(self.data[evoked0][evoked_name].items()):
+                for ii,(key,evoked) in enumerate(self.data[evoked0][quest0].items()):
                     title = ""
                     title += "EEG ({}) ".format( evoked.info["nchan"] - len(evoked.info["bads"]) )
                     title += str(self.locs.of_stem)
@@ -2502,7 +2564,7 @@ class BatchMNE:
 
                     of_suff = ""
                     of_suff = ".".join([of_suff,str(whoami()),evoked0])
-                    of_suff = ".".join([of_suff,str(evoked_name)])
+                    of_suff = ".".join([of_suff,str(quest0)])
                     of_suff = ".".join([of_suff,"{:03d}".format(ii)])
                     of_suff = ".".join([of_suff,str(key)])
                     of_suff = ".".join([of_suff,suffFig])
@@ -2517,7 +2579,7 @@ class BatchMNE:
             def plot_evoked_COMPARE(
                     self,
                     evoked0,
-                    evoked_name,
+                    quest0,
                     chans0,
                     showFig = False,
                     suffFig = "",
@@ -2530,7 +2592,7 @@ class BatchMNE:
                 self.BATCH.logger.info (space0[1]+"plotting evoked for some data channels accross conditions")
                 self.BATCH.logger.info (space0[1]+"processing: {}" .format(repr(str( self        ))))
                 self.BATCH.logger.info (space0[1]+"evoked0: {}"    .format(repr(str( evoked0     ))))
-                self.BATCH.logger.info (space0[1]+"evoked_name: {}".format(repr(str( evoked_name ))))
+                self.BATCH.logger.info (space0[1]+"quest0: {}".format(repr(str( quest0 ))))
                 self.BATCH.logger.info (space0[1]+"chans0: {}" .format(repr(str( chans0  ))))
 
                 assert chans0, "PROBLEM: chans0 should not be empty"
@@ -2545,7 +2607,7 @@ class BatchMNE:
                     ## Here (for each iteration) we produce list with exactly one item
                     ## Hence [0]
                     figs = mne.viz.plot_compare_evokeds(
-                        evokeds  = self.data[evoked0][evoked_name],
+                        evokeds  = self.data[evoked0][quest0],
                         picks    = item0,
                         ci       = 0.95,
                         ylim     = dict(eeg=[-12,12]),
@@ -2563,7 +2625,7 @@ class BatchMNE:
                     of_suff = ""
                     of_suff = ".".join([of_suff,str(whoami()),evoked0])
                     of_suff = ".".join([of_suff,"CHAN" if isinstance(item0, str) else "BUND"])
-                    of_suff = ".".join([of_suff,str(evoked_name)])
+                    of_suff = ".".join([of_suff,str(quest0)])
                     of_suff = ".".join([of_suff,"{:03d}".format(idx0)])
                     # of_suff = ".".join([of_suff,str(item0).replace(" ","+",).replace("[","",).replace("]","",)])
                     of_suff = ".".join([of_suff,str(item0) if isinstance(item0, str) else "+".join(item0) ])
@@ -2984,7 +3046,7 @@ class BatchMNE:
             def evoked_to_dataframe(
                     self,
                     evoked0,
-                    evoked_name,
+                    quest0,
                     df0_evoked0,
             ):
                 self.BATCH.logger.info(
@@ -2995,13 +3057,13 @@ class BatchMNE:
                 self.BATCH.logger.info (space0[1]+"converting evoked to pandas dataframe")
                 self.BATCH.logger.info (space0[1]+"processing: {}" .format( repr(str( self        ))))
                 self.BATCH.logger.info (space0[1]+"evoked0: {}"    .format( repr(str( evoked0     ))))
-                self.BATCH.logger.info (space0[1]+"evoked_name: {}".format( repr(str( evoked_name ))))
+                self.BATCH.logger.info (space0[1]+"quest0: {}".format( repr(str( quest0 ))))
                 self.BATCH.logger.info (space0[1]+"df0_evoked0: {}".format( repr(str( df0_evoked0 ))))
 
 
                 df0 = pd.DataFrame()
 
-                for ii,(key0,val0) in enumerate(self.data[evoked0][evoked_name].items()):
+                for ii,(key0,val0) in enumerate(self.data[evoked0][quest0].items()):
                     assert isinstance(val0, mne.evoked.Evoked), "PROBLEM: all items in evoked0 should be an instance of mne.evoked.Evoked"
                     temp0 =  val0.to_data_frame(
                         time_format=None,
