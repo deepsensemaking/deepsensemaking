@@ -92,6 +92,7 @@ checkup:
 import matplotlib
 from matplotlib import pyplot as plt
 from matplotlib.pyplot import imshow
+from matplotlib.colors import ListedColormap
 
 import seaborn as sns
 
@@ -933,7 +934,6 @@ class BatchMNE:
                     self,
                     ASK           = False,
                     cleanup       = False,
-                    skip_raw_read = False,
             ):
                 """
                 This JOB
@@ -953,15 +953,14 @@ class BatchMNE:
                 """
                 Read RAW data
                 """
-                if not skip_raw_read:
-                    self.read_raw_data(
-                        raw0    = "raw0",
-                        preload = True,
-                        verbose = None,
-                    )
-                    self.check_chans_number(
-                        raw0 = "raw0",
-                    )
+                self.read_raw_data(
+                    raw0    = "raw0",
+                    preload = True,
+                    verbose = None,
+                )
+                self.check_chans_number(
+                    raw0 = "raw0",
+                )
                 """
                 If present BAD channels SHOULD be loaded during the SECOND RUN
                 """
@@ -1089,7 +1088,7 @@ class BatchMNE:
                 self.plot_epochs_using_chan_BUNDLES_carpet(
                     epochs0 = "epochs0",
                     showFig = False,
-                    suffFig="ver005_before_BAD_epochs_drop",
+                    suffFig = "ver005_before_BAD_epochs_drop",
                 )
                 if sys.stdout.isatty(): plt.close("all")
 
@@ -1106,9 +1105,9 @@ class BatchMNE:
                 """
                 if sys.stdout.isatty(): plt.close("all")
                 self.plot_epochs_using_chan_BUNDLES_carpet(
-                    epochs0="epochs0",
+                    epochs0 = "epochs0",
                     showFig = False,
-                    suffFig="ver006_after_BAD_epochs_drop",
+                    suffFig = "ver006_after_BAD_epochs_drop",
                 )
                 if sys.stdout.isatty(): plt.close("all")
 
@@ -1121,7 +1120,7 @@ class BatchMNE:
                 if sys.stdout.isatty(): plt.close("all")
                 self.plot_evoked_JOINT(
                     evoked0           = "evoked0",
-                    quest0       = "word_set",
+                    quest0            = "word_set",
                     apply_projections = True,
                     interpolate_bads  = True,
                     showFig           = False,
@@ -1129,7 +1128,7 @@ class BatchMNE:
                 )
                 self.plot_evoked_JOINT(
                     evoked0           = "evoked0",
-                    quest0       = "word_len",
+                    quest0            = "word_len",
                     apply_projections = True,
                     interpolate_bads  = True,
                     showFig           = False,
@@ -1137,44 +1136,50 @@ class BatchMNE:
                 )
                 if sys.stdout.isatty(): plt.close("all")
 
+                self.extract_PEAKS_from_evoked(
+                    peaks0     = "peaks0",
+                    evoked0    = "evoked0",
+                    chans0     = self.BATCH.dataBase.setup["chans"]["bund1"]["B1"],
+                    bunds0     = self.BATCH.dataBase.setup["chans"]["bund0"].items(),
+                    timespans0 = list(self.BATCH.dataBase.setup["time"]["spans0"].values()),
+                )
+
                 if sys.stdout.isatty(): plt.close("all")
-                chans0 = ["C3","C4","F3","F4","PO3","PO4","O1","O2",]
+                chans1 = ["C3","C4","F3","F4","PO3","PO4","O1","O2",]
+                chans2 = ["Fz","Cz","Pz","Oz","CPz","POz","FCz"]
+                chans0 = chans2
+                chans0 = chans0 + chans2
+                chans0 = chans1
+                bunds0 = self.BATCH.dataBase.setup["chans"]["bund0"]
                 self.plot_evoked_COMPARE(
-                    evoked0     = "evoked0",
-                    quest0 = "word_set",
-                    chans0  = chans0,
+                    evoked0     = "evoked0",  # "evoked0" OR "evoked2" OR ...
+                    quest0      = "word_set", # "word_set" OR "word_len"
+                    chans0      = chans0,
+                    bunds0      = bunds0,
                     showFig     = False,
                     suffFig     = "",
+                    colors0     = self.BATCH.dataBase.setup["colors0"]["word_set"],
+                    styles0     = self.BATCH.dataBase.setup["styles0"]["word_set"],
+                    linestyles0 = self.BATCH.dataBase.setup["linestyles0"]["word_set"],
+                    vlines7     = self.BATCH.dataBase.setup["time"]["vlines7"],
+                    timespans0  = list(self.BATCH.dataBase.setup["time"]["spans0"].values()),
+                    colors6     = self.BATCH.dataBase.setup["time"]["colors6"],
+                    peaks0     = "peaks0",
                 )
                 self.plot_evoked_COMPARE(
-                    evoked0     = "evoked0",
-                    quest0 = "word_len",
-                    chans0  = chans0,
+                    evoked0     = "evoked0",  # "evoked0" OR "evoked2" OR ...
+                    quest0      = "word_len", # "word_set" OR "word_len"
+                    chans0      = chans0,
+                    bunds0      = bunds0,
                     showFig     = False,
                     suffFig     = "",
-                )
-                chans0 = ['Fz', 'Cz', 'Pz', 'Oz', 'CPz', 'POz', 'FCz']
-                self.plot_evoked_COMPARE(
-                    evoked0     = "evoked0",
-                    quest0 = "word_set",
-                    chans0  = chans0,
-                    showFig     = False,
-                    suffFig     = "",
-                )
-                chans0 = [
-                    self.BATCH.dataBase.setup["chans"]["bund0"]["LF"],
-                    self.BATCH.dataBase.setup["chans"]["bund0"]["RF"],
-                    self.BATCH.dataBase.setup["chans"]["bund0"]["LC"],
-                    self.BATCH.dataBase.setup["chans"]["bund0"]["RC"],
-                    self.BATCH.dataBase.setup["chans"]["bund0"]["RP"],
-                    self.BATCH.dataBase.setup["chans"]["bund0"]["LP"],
-                ]
-                self.plot_evoked_COMPARE(
-                    evoked0     = "evoked0",
-                    quest0 = "word_set",
-                    chans0  = chans0,
-                    showFig     = False,
-                    suffFig     = "",
+                    colors0     = self.BATCH.dataBase.setup["colors0"]["word_len"],
+                    styles0     = self.BATCH.dataBase.setup["styles0"]["word_len"],
+                    linestyles0 = self.BATCH.dataBase.setup["linestyles0"]["word_len"],
+                    vlines7     = self.BATCH.dataBase.setup["time"]["vlines7"],
+                    timespans0  = list(self.BATCH.dataBase.setup["time"]["spans0"].values()),
+                    colors6     = self.BATCH.dataBase.setup["time"]["colors6"],
+                    peaks0     = "peaks0",
                 )
                 if sys.stdout.isatty(): plt.close("all")
 
@@ -1190,6 +1195,8 @@ class BatchMNE:
                 )
                 """
                 self.drop_BAD_epochs()
+
+
 
                 self.write_hkl()
                 self.mark_DONE()
@@ -1307,7 +1314,9 @@ class BatchMNE:
                 if sys.stdout.isatty(): plt.close("all")
 
                 if sys.stdout.isatty(): plt.close("all")
-                chans0 =  ["C3","C4","F3","F4","PO3","PO4",]
+                chans0 = ["C3","C4","F3","F4","PO3","PO4",]
+                chans0 = ["C3","C4","F3","F4","PO3","PO4","O1","O2",]
+
                 self.plot_evoked_COMPARE(evoked0="evoked2",chans0=chans0,quest0="word_set",)
                 self.plot_evoked_COMPARE(evoked0="evoked2",chans0=chans0,quest0="word_len",)
                 if sys.stdout.isatty(): plt.close("all")
@@ -2394,13 +2403,37 @@ class BatchMNE:
 
 
 
+            def construct_evoked_WORD_LEN(
+                    self,
+                    evoked0,
+                    epochs0,
+            ):
+                self.BATCH.logger.info(
+                    space0[0]+"RUNNING: {}.{}".format(
+                        ".".join(self.INSP),
+                        str(whoami()),
+                ))
+                self.BATCH.logger.info (space0[1]+"constructing evoked with respect to word length")
+                self.BATCH.logger.info (space0[1]+"processing: {}".format(repr(str( self    ))))
+                self.BATCH.logger.info (space0[1]+"evoked0: {}"   .format(repr(str( evoked0 ))))
+                self.BATCH.logger.info (space0[1]+"epochs0: {}"   .format(repr(str( epochs0 ))))
+                # self.data[evoked0]             = OrderedDict()
+                self.data[evoked0]["word_len"] = OrderedDict()
+                query = 'LEN == {}'
+                for n_letters in sorted( self.data[epochs0].metadata["LEN"].unique()):
+                    self.BATCH.logger.debug(space0[1]+"n_letters: {}"   .format(repr(str(n_letters))))
+                    self.data[evoked0]["word_len"][str(n_letters)] = self.data[epochs0][query.format(n_letters)].average()
+
+
+
+
             def extract_PEAKS_from_evoked(
                     self,
                     peaks0,     # "peaks0"
                     evoked0,    # "evoked2"
                     chans0,     # self.BATCH.dataBase.setup["chans"]["bund1"]["B1"]
                     bunds0,     # self.BATCH.dataBase.setup["chans"]["bund0"].items()
-                    timespans0, # list(DS0.dataBase.setup["time"]["spans0"].values())
+                    timespans0, # list(self.BATCH.dataBase.setup["time"]["spans0"].values())
             ):
                 self.BATCH.logger.info(
                     space0[0]+"RUNNING: {}.{}".format(
@@ -2448,7 +2481,7 @@ class BatchMNE:
                         for key2,val2 in bunds0:
                             self.BATCH.logger.info (space0[2]+"bunds0: {}".format(repr(str( bunds0 ))))
                             self.BATCH.logger.info (space0[2]+"bunds0 key2: {}".format(repr(str( key2 ))))
-                            self.BATCH.logger.info (space0[2]+"bunds0 key2: {}".format(repr(str( val2 ))))
+                            self.BATCH.logger.info (space0[2]+"bunds0 val2: {}".format(repr(str( val2 ))))
                             bunds0idx[key2] = mne.pick_channels(inst0.info['ch_names'], val2 )
                         inst1 = mne.channels.combine_channels(
                             inst   = inst0,
@@ -2475,30 +2508,7 @@ class BatchMNE:
                                     df1["valX"] = df1["valX"]*1e6
                                     df0 = df0.append(df1)
 
-
-
-
-
-            def construct_evoked_WORD_LEN(
-                    self,
-                    evoked0,
-                    epochs0,
-            ):
-                self.BATCH.logger.info(
-                    space0[0]+"RUNNING: {}.{}".format(
-                        ".".join(self.INSP),
-                        str(whoami()),
-                ))
-                self.BATCH.logger.info (space0[1]+"constructing evoked with respect to word length")
-                self.BATCH.logger.info (space0[1]+"processing: {}".format(repr(str( self    ))))
-                self.BATCH.logger.info (space0[1]+"evoked0: {}"   .format(repr(str( evoked0 ))))
-                self.BATCH.logger.info (space0[1]+"epochs0: {}"   .format(repr(str( epochs0 ))))
-                # self.data[evoked0]             = OrderedDict()
-                self.data[evoked0]["word_len"] = OrderedDict()
-                query = 'LEN == {}'
-                for n_letters in sorted( self.data[epochs0].metadata["LEN"].unique()):
-                    self.BATCH.logger.debug(space0[1]+"n_letters: {}"   .format(repr(str(n_letters))))
-                    self.data[evoked0]["word_len"][str(n_letters)] = self.data[epochs0][query.format(n_letters)].average()
+                self.data[peaks0] = dc(df0)
 
 
 
@@ -2563,11 +2573,12 @@ class BatchMNE:
                         (fig or plt).show()
 
                     of_suff = ""
-                    of_suff = ".".join([of_suff,str(whoami()),evoked0])
+                    of_suff = ".".join([of_suff,str(whoami())])
                     of_suff = ".".join([of_suff,str(quest0)])
                     of_suff = ".".join([of_suff,"{:03d}".format(ii)])
                     of_suff = ".".join([of_suff,str(key)])
-                    of_suff = ".".join([of_suff,suffFig])
+                    of_suff = ".".join([of_suff,evoked0])
+                    of_suff = ".".join([of_suff,suffFig] if suffFig else [])
                     of_suff = ".".join([of_suff,"png"])
                     of_name = self.locs.of_base.with_suffix(of_suff)
                     self.BATCH.logger.info (space0[1]+"of_name: {}".format(repr(str( of_name ))))
@@ -2578,11 +2589,22 @@ class BatchMNE:
 
             def plot_evoked_COMPARE(
                     self,
-                    evoked0,
-                    quest0,
-                    chans0,
-                    showFig = False,
-                    suffFig = "",
+                    evoked0,            # "evoked0" OR "evoked2" OR ...
+                    quest0,             # "word_set" OR "word_len"
+                    chans0      = None, #
+                    # chans0,           # ["C3","C4","F3","F4","PO3","PO4","O1","O2",]
+                    # chans0,           # ['Fz', 'Cz', 'Pz', 'Oz', 'CPz', 'POz', 'FCz']
+                    # chans0,           # self.BATCH.dataBase.setup["chans"]["bund1"]["B1"]
+                    bunds0      = None, # self.BATCH.dataBase.setup["chans"]["bund0"]
+                    showFig     = False,
+                    suffFig     = "",
+                    colors0     = None, # self.BATCH.dataBase.setup["colors0"]["word_set"]
+                    styles0     = None, # self.BATCH.dataBase.setup["colors0"]["word_set"]
+                    linestyles0 = None, # self.BATCH.dataBase.setup["colors0"]["word_set"]
+                    vlines7     = [0],  # self.BATCH.dataBase.setup["time"]["vlines7"]
+                    timespans0  = None, # list(self.BATCH.dataBase.setup["time"]["spans0"].values())
+                    colors6     = None, # self.BATCH.dataBase.setup["time"]["colors6"]
+                    peaks0      = None, # "peaks0"
             ):
                 self.BATCH.logger.info(
                     space0[0]+"RUNNING: {}.{}".format(
@@ -2592,44 +2614,90 @@ class BatchMNE:
                 self.BATCH.logger.info (space0[1]+"plotting evoked for some data channels accross conditions")
                 self.BATCH.logger.info (space0[1]+"processing: {}" .format(repr(str( self        ))))
                 self.BATCH.logger.info (space0[1]+"evoked0: {}"    .format(repr(str( evoked0     ))))
-                self.BATCH.logger.info (space0[1]+"quest0: {}".format(repr(str( quest0 ))))
+                self.BATCH.logger.info (space0[1]+"quest0: {}" .format(repr(str( quest0 ))))
                 self.BATCH.logger.info (space0[1]+"chans0: {}" .format(repr(str( chans0  ))))
 
-                assert chans0, "PROBLEM: chans0 should not be empty"
+                if (chans0 is not None) & (bunds0 is not None):
+                    assert 0 == len(set(bunds0.keys()).intersection(set(chans0))), "PROBLEM: channel names (chans0) overlap with channel bundle names (bunds0)"
+
+                picks0 = OrderedDict()
+                if (chans0 is not None):
+                    for chan0      in chans0:         picks0[chan0] = chan0
+                if (bunds0 is not None):
+                    for key0,bund0 in bunds0.items(): picks0[key0] = bund0
+
+                assert 0 < len(picks0), "PROBLEM: chans0 OR bunds0 should not be empty"
 
                 combine  = "gfp"
                 combine  = "mean"
 
-
-                for idx0,item0 in enumerate(chans0):
-                    title =  str(self.locs.of_stem) + ": " + str(item0) + " ({})".format(evoked0)
-                    ## Normally a list of figures is created
+                for idx0,(key0,pick0) in enumerate(picks0.items()):
+                    title = ""
+                    title = " ".join([title,"Evoked: {} ".format( self.locs.of_stem )])
+                    title = " ".join([title,"({})".format(evoked0)])
+                    title = " ".join([title,"{}".format(key0)])
+                    title = " ".join([title,"[{}]".format(pick0) if isinstance(pick0, str) else "{}".format(pick0)])
+                    ## Typically a list of figures is created with "plot_compare_evokeds()"
                     ## Here (for each iteration) we produce list with exactly one item
-                    ## Hence [0]
+                    ## Hence below we use "figs[0]"
                     figs = mne.viz.plot_compare_evokeds(
-                        evokeds  = self.data[evoked0][quest0],
-                        picks    = item0,
-                        ci       = 0.95,
-                        ylim     = dict(eeg=[-12,12]),
-                        invert_y = True,
-                        title    = title,
-                        show     = False,
-                        combine  = combine,
-                        vlines   = list(self.BATCH.dataBase.setup["time"]["means0"].values())
+                        evokeds      = self.data[evoked0][quest0],
+                        picks        = pick0,
+                        ci           = 0.95,
+                        ylim         = dict(eeg=[-12,12]),
+                        invert_y     = True,
+                        title        = title,
+                        show         = False,
+                        combine      = combine,
+                        colors       = colors0,
+                        styles       = styles0,
+                        linestyles   = linestyles0,
+                        vlines       = vlines7,
+                        show_sensors = True,
                     )
                     figs[0].set_size_inches(16,8)
-                    plt.xticks(rotation=45,ha="right",**{"size":"12"})
+                    labels0 = figs[0].axes[0].get_xticklabels()
+                    for label0 in labels0:
+                        label0.set_rotation(45)
+
+                    if (timespans0 is not None) & (colors6 is not None):
+                        ## convert timespans (t0,t1) to start and duration
+                        params0 = [ [time0[0],time0[1]-time0[0]] for time0 in timespans0 ]
+                        for ii,param0 in enumerate(params0):
+                            rect0 = matplotlib.patches.Rectangle([param0[0],-12],param0[1],24,angle=0.0,color=colors6[ii],alpha=0.1,)
+                            figs[0].axes[0].add_patch(rect0)
+
+                    if peaks0 is not None:
+                        df0 = dc(self.data["peaks0"])
+                        ## TODO FIXME CONSIDER if sorting is necessary here to reflect figs[0] order of stuff
+                        arPos = df0[ True
+                                     & (df0["evoked0"] == evoked0)
+                                     & (df0["quest0"]  == quest0)
+                                     & (df0["chanX"]   == key0)
+                                     & (df0["mode0"]   == "pos")
+                        ][["latX","valX"]].to_numpy(copy=True,)
+                        arNeg = df0[ True
+                                     & (df0["evoked0"] == evoked0)
+                                     & (df0["quest0"]  == quest0)
+                                     & (df0["chanX"]   == key0)
+                                     & (df0["mode0"]   == "neg")
+                        ][["latX","valX"]].to_numpy(copy=True,)
+                        figs[0].axes[0].scatter(arPos.T[0],arPos.T[1],s=48,facecolors="none",edgecolors=colors6*len(colors0),marker="v",zorder=1200)
+                        figs[0].axes[0].scatter(arNeg.T[0],arNeg.T[1],s=48,facecolors="none",edgecolors=colors6*len(colors0),marker="^",zorder=1200)
+
                     if showFig:
-                        (fig or plt).show()
+                        (figs[0] or plt).show()
 
                     of_suff = ""
-                    of_suff = ".".join([of_suff,str(whoami()),evoked0])
-                    of_suff = ".".join([of_suff,"CHAN" if isinstance(item0, str) else "BUND"])
+                    of_suff = ".".join([of_suff,str(whoami())])
+                    of_suff = ".".join([of_suff,"CHAN" if isinstance(pick0, str) else "BUND"])
                     of_suff = ".".join([of_suff,str(quest0)])
                     of_suff = ".".join([of_suff,"{:03d}".format(idx0)])
-                    # of_suff = ".".join([of_suff,str(item0).replace(" ","+",).replace("[","",).replace("]","",)])
-                    of_suff = ".".join([of_suff,str(item0) if isinstance(item0, str) else "+".join(item0) ])
-                    of_suff = ".".join([of_suff,suffFig])
+                    # of_suff = ".".join([of_suff,str(pick0).replace(" ","+",).replace("[","",).replace("]","",)])
+                    # of_suff = ".".join([of_suff,str(pick0) if isinstance(pick0, str) else "+".join(pick0) ])
+                    of_suff = ".".join([of_suff,str(key0)])
+                    of_suff = ".".join([of_suff,evoked0])
+                    of_suff = ".".join([of_suff,suffFig] if suffFig else [])
                     of_suff = ".".join([of_suff,"png"])
                     of_name = self.locs.of_base.with_suffix(of_suff)
                     self.BATCH.logger.info (space0[1]+"of_name: {}".format(repr(str( of_name ))))
