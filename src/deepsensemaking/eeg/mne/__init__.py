@@ -120,6 +120,7 @@ from collections import UserDict
 from deepsensemaking.bids  import get_bids_prop
 from deepsensemaking.dicts import str_dict,print_dict
 
+import itertools
 
 import mne
 mne.set_log_level("WARNING")
@@ -1136,7 +1137,7 @@ class BatchMNE:
                 )
                 if sys.stdout.isatty(): plt.close("all")
 
-                self.extract_PEAKS_from_evoked(
+                self.extract_PEAKS_from_evoked_to_dataframe(
                     peaks0     = "peaks0",
                     evoked0    = "evoked0",
                     chans0     = self.BATCH.dataBase.setup["chans"]["bund1"]["B1"],
@@ -2001,6 +2002,7 @@ class BatchMNE:
                 self.BATCH.logger.info (space0[1]+"selecting exclusively stimuli-related events...")
                 self.BATCH.logger.info (space0[2]+"these will be kept in pandas DataFrame...")
                 self.BATCH.logger.info (space0[2]+"under meta1: {} key ".format(repr(str( meta1 ))))
+
                 self.data[events0][meta1] = self.data[events0][meta0].copy(deep=True)[
                     (self.data[events0][meta0]["CODE"] > 100) &
                     (self.data[events0][meta0]["CODE"] < 300)
@@ -2027,11 +2029,19 @@ class BatchMNE:
                     indicator = False,
                     validate  = "m:1",
                 )
-                self.BATCH.logger.info (space0[2]+"adding extra columns (FILE,SUB,RUN,TASK) to {}...".format(repr(str( meta1 ))))
-                self.data[events0][meta1]["FILE"] = str(self.locs.of_stem)
+                self.BATCH.logger.info (space0[2]+"adding extra columns (STEM,SUB,RUN,TASK) to {}...".format(repr(str( meta1 ))))
+                self.data[events0][meta1]["STEM"] = str(self.locs.of_stem)
                 self.data[events0][meta1]["SUB"]  = get_bids_prop(if_name=str(self.locs.of_stem),prop="sub",)
                 self.data[events0][meta1]["RUN"]  = get_bids_prop(if_name=str(self.locs.of_stem),prop="run",)
                 self.data[events0][meta1]["TASK"] = get_bids_prop(if_name=str(self.locs.of_stem),prop="task",)
+
+
+                                    df1["SUB"]  = self.sub
+                                    df1["SES"]  = self.ses
+                                    df1["TASK"] = self.task
+                                    df1["RUN"]  = self.run
+
+
 
 
                 self.BATCH.logger.info (space0[1]+"exporting event onset information from {}...".format(repr(str(meta1))))
@@ -2428,7 +2438,7 @@ class BatchMNE:
 
 
 
-            def extract_PEAKS_from_evoked(
+            def extract_PEAKS_from_evoked_to_dataframe(
                     self,
                     peaks0,     # "peaks0"
                     evoked0,    # "evoked2"
@@ -2475,6 +2485,10 @@ class BatchMNE:
                                         columns=["evoked0","quest0","cond0","chan0","tmin0","tmax0","mode0","chanX","latX","valX"],
                                     )
                                     df1["valX"] = df1["valX"]*1e6
+                                    df1["SUB"]  = self.sub
+                                    df1["SES"]  = self.ses
+                                    df1["TASK"] = self.task
+                                    df1["RUN"]  = self.run
                                     df0 = df0.append(df1)
 
                         inst0     = dc(val0)
@@ -2507,6 +2521,10 @@ class BatchMNE:
                                         columns=["evoked0","quest0","cond0","chan0","tmin0","tmax0","mode0","chanX","latX","valX"],
                                     )
                                     df1["valX"] = df1["valX"]*1e6
+                                    df1["SUB"]  = self.sub
+                                    df1["SES"]  = self.ses
+                                    df1["TASK"] = self.task
+                                    df1["RUN"]  = self.run
                                     df0 = df0.append(df1)
 
                 self.data[peaks0] = dc(df0)
@@ -2598,6 +2616,7 @@ class BatchMNE:
                     # chans0,           # self.BATCH.dataBase.setup["chans"]["bund1"]["B1"]
                     bunds0      = None, # self.BATCH.dataBase.setup["chans"]["bund0"]
                     showFig     = False,
+                    saveFig     = True,
                     suffFig     = "",
                     colors0     = None, # self.BATCH.dataBase.setup["colors0"]["word_set"]
                     styles0     = None, # self.BATCH.dataBase.setup["colors0"]["word_set"]
@@ -2683,26 +2702,35 @@ class BatchMNE:
                                      & (df0["chanX"]   == key0)
                                      & (df0["mode0"]   == "neg")
                         ][["latX","valX"]].to_numpy(copy=True,)
-                        figs[0].axes[0].scatter(arPos.T[0],arPos.T[1],s=48,facecolors="none",edgecolors=colors6*len(colors0),marker="v",zorder=1200)
-                        figs[0].axes[0].scatter(arNeg.T[0],arNeg.T[1],s=48,facecolors="none",edgecolors=colors6*len(colors0),marker="^",zorder=1200)
+                        facecolors0 = list(colors0.values())
+
+
+                        facecolors0 = list(itertools.chain.from_iterable(itertools.repeat(col0, len(colors6)) for col0 in facecolors0))
+
+
+
+                        edgecolors0 = colors6*len(colors0)
+                        figs[0].axes[0].scatter(arPos.T[0],arPos.T[1]+0.2,s=48,facecolors=facecolors0,edgecolors=edgecolors0,marker="^",zorder=1200)
+                        figs[0].axes[0].scatter(arNeg.T[0],arNeg.T[1]-0.2,s=48,facecolors=facecolors0,edgecolors=edgecolors0,marker="v",zorder=1200)
 
                     if showFig:
                         (figs[0] or plt).show()
 
-                    of_suff = ""
-                    of_suff = ".".join([of_suff,str(whoami())])
-                    of_suff = ".".join([of_suff,str(quest0)])
-                    of_suff = ".".join([of_suff,"{:03d}".format(idx0)])
-                    of_suff = ".".join([of_suff,"CHAN" if isinstance(pick0, str) else "BUND"])
-                    # of_suff = ".".join([of_suff,str(pick0).replace(" ","+",).replace("[","",).replace("]","",)])
-                    # of_suff = ".".join([of_suff,str(pick0) if isinstance(pick0, str) else "+".join(pick0) ])
-                    of_suff = ".".join([of_suff,str(key0)])
-                    of_suff = ".".join([of_suff,evoked0])
-                    of_suff = ".".join([of_suff,suffFig] if suffFig else [of_suff])
-                    of_suff = ".".join([of_suff,"png"])
-                    of_name = self.locs.of_base.with_suffix(of_suff)
-                    self.BATCH.logger.info (space0[1]+"of_name: {}".format(repr(str( of_name ))))
-                    figs[0].savefig(of_name, dpi=figs[0].dpi,)
+                    if saveFig:
+                        of_suff = ""
+                        of_suff = ".".join([of_suff,str(whoami())])
+                        of_suff = ".".join([of_suff,str(quest0)])
+                        of_suff = ".".join([of_suff,"{:03d}".format(idx0)])
+                        of_suff = ".".join([of_suff,"CHAN" if isinstance(pick0, str) else "BUND"])
+                        # of_suff = ".".join([of_suff,str(pick0).replace(" ","+",).replace("[","",).replace("]","",)])
+                        # of_suff = ".".join([of_suff,str(pick0) if isinstance(pick0, str) else "+".join(pick0) ])
+                        of_suff = ".".join([of_suff,str(key0)])
+                        of_suff = ".".join([of_suff,evoked0])
+                        of_suff = ".".join([of_suff,suffFig] if suffFig else [of_suff])
+                        of_suff = ".".join([of_suff,"png"])
+                        of_name = self.locs.of_base.with_suffix(of_suff)
+                        self.BATCH.logger.info (space0[1]+"of_name: {}".format(repr(str( of_name ))))
+                        figs[0].savefig(of_name, dpi=figs[0].dpi,)
 
 
 
@@ -2965,8 +2993,6 @@ class BatchMNE:
 
 
 
-
-
             def apply_projections_and_interpolate_bads(
                     self,
                     ica0    = "ica0",
@@ -3114,9 +3140,9 @@ class BatchMNE:
 
             def evoked_to_dataframe(
                     self,
-                    evoked0,
-                    quest0,
-                    df0_evoked0,
+                    evoked0,     # evoked0     = "evoked0"
+                    quest0,      # quest0      = "word_set"             # OR "word_len"
+                    df0_evoked0, # df0_evoked0 = "df0_evoked0_word_set" # OR "df0_evoked0_word_len"
             ):
                 self.BATCH.logger.info(
                     space0[0]+"RUNNING: {}.{}".format(
@@ -3150,10 +3176,10 @@ class BatchMNE:
 
             def epochs_to_dataframe(
                     self,
-                    epochs0,
-                    events0,
-                    meta1,
-                    df0_epochs0,
+                    epochs0,     # epochs0     = "epochs0"
+                    events0,     # events0     = "events0"
+                    meta1,       # meta1       = "meta1"
+                    df0_epochs0, # df0_epochs0 = "df0_epochs0"
             ):
                 self.BATCH.logger.info(
                     space0[0]+"RUNNING: {}.{}".format(
@@ -3201,6 +3227,6 @@ class BatchMNE:
                         for item in val:
                             di1[item] = key
 
-                    df0["BUNDLE"] = df0["channel"].apply(lambda x: di1[x] if x in di1 else None)
+                    df0["CHAN_BUND"] = df0["channel"].apply(lambda x: di1[x] if x in di1 else None)
 
                 self.data[df0_epochs0] = dc(df0)
