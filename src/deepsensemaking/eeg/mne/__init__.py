@@ -1151,6 +1151,7 @@ class BatchMNE:
                     chans0     = self.BATCH.dataBase.setup["chans"]["bund1"]["B1"],
                     bunds0     = self.BATCH.dataBase.setup["chans"]["bund0"].items(),
                     timespans0 = list(self.BATCH.dataBase.setup["time"]["spans0"].values()),
+                    stupid     = False,
                 )
                 self.evoked_to_dataframe(
                     evoked0      = "evoked0",
@@ -1169,6 +1170,7 @@ class BatchMNE:
                 chans0 = chans2
                 chans0 = chans0 + chans2
                 chans0 = chans1
+                chans0 = None
                 bunds0 = self.BATCH.dataBase.setup["chans"]["bund0"]
                 self.plot_evoked_COMPARE(
                     evoked0     = "evoked0",  # "evoked0" OR "evoked2" OR ...
@@ -1852,9 +1854,7 @@ class BatchMNE:
                 )
                 fig.axes[0].set(title=title_new)
                 # plt.tight_layout(pad=.5)
-                if showFig:
-                    (fig or plt).show()
-
+                if showFig: (fig or plt).show()
                 if saveFig:
                     of_name = self.locs.of_base.with_suffix(of_suff)
                     self.BATCH.logger.info (space0[1]+"of_name: {}".format(repr(str( of_name ))))
@@ -1918,9 +1918,7 @@ class BatchMNE:
                 # fig.axes[0].set(title=title_new)
 
                 # plt.tight_layout(pad=.5)
-                if showFig:
-                    (fig or plt).show()
-
+                if showFig: (fig or plt).show()
                 if saveFig:
                     of_name = self.locs.of_base.with_suffix(of_suff)
                     self.BATCH.logger.info (space0[1]+"of_name: {}".format(repr(str(of_name))))
@@ -2294,12 +2292,8 @@ class BatchMNE:
                     epochs0,
                     title_old,
                 )
-
                 fig.axes[0].set(title=title_new)
-
-                if showFig:
-                    (fig or plt).show()
-
+                if showFig: (fig or plt).show()
                 of_suff = ""
                 of_suff = ".".join([of_suff,str(whoami()),epochs0])
                 of_suff = ".".join([of_suff,"0"])
@@ -2366,9 +2360,7 @@ class BatchMNE:
                         )
                         fig.axes[0].set(title=title_new)
                         title_bndl = title_old.partition(" ")[0]
-                        if showFig:
-                            (fig or plt).show()
-
+                        if showFig: (fig or plt).show()
                         of_suff = ""
                         of_suff = ".".join([of_suff,str(whoami())])
                         of_suff = ".".join([of_suff,"{:03d}".format(jj)])
@@ -2437,11 +2429,12 @@ class BatchMNE:
 
             def extract_PEAKS_from_evoked_to_dataframe(
                     self,
-                    df0_peaks0, # df0_peaks0 = "df0_peaks0",
-                    evoked0,    # evoked0    = "evoked2",
-                    chans0,     # chans0     = self.BATCH.dataBase.setup["chans"]["bund1"]["B1"],
-                    bunds0,     # bunds0     = self.BATCH.dataBase.setup["chans"]["bund0"].items(),
-                    timespans0, # timespans0 = list(self.BATCH.dataBase.setup["time"]["spans0"].values()),
+                    df0_peaks0,     # df0_peaks0 = "df0_peaks0",
+                    evoked0,        # evoked0    = "evoked2",
+                    chans0,         # chans0     = self.BATCH.dataBase.setup["chans"]["bund1"]["B1"],
+                    bunds0,         # bunds0     = self.BATCH.dataBase.setup["chans"]["bund0"].items(),
+                    timespans0,     # timespans0 = list(self.BATCH.dataBase.setup["time"]["spans0"].values()),
+                    stupid = False, # stupid     = False,
             ):
                 self.BATCH.logger.info(
                     space0[0]+"RUNNING: {}.{}".format(
@@ -2470,13 +2463,6 @@ class BatchMNE:
                                 tmin0 = timespan0[0]
                                 tmax0 = timespan0[1]
                                 for mode0 in ["pos","neg"]:
-                                    ## chanX,latX,valX = val0.copy().pick(chan0).get_peak(
-                                    ##     ch_type          = "eeg",
-                                    ##     tmin             = tmin0,
-                                    ##     tmax             = tmax0,
-                                    ##     mode             = mode0,
-                                    ##     return_amplitude = True,
-                                    ## )
                                     smin0,smax0 = val0.time_as_index([tmin0,tmax0])
                                     chan_data = val0.copy().pick(chan0).data[0,smin0:smax0]
                                     if mode0 == "neg": chan_data = -chan_data
@@ -2497,6 +2483,15 @@ class BatchMNE:
                                     latX  = latX[0] if latX.size > 0 else np.nan
                                     valX  = valX[0] if valX.size > 0 else np.nan
                                     if mode0 == "neg": valX = -valX
+                                    if stupid:
+                                        chanX,latX,valX = val0.copy().pick(chan0).get_peak(
+                                            ch_type          = "eeg",
+                                            tmin             = tmin0,
+                                            tmax             = tmax0,
+                                            mode             = mode0,
+                                            return_amplitude = True,
+                                        )
+
                                     df1 = pd.DataFrame(
                                         [[evoked0,quest0,cond0,chan0,tmin0,tmax0,mode0,chanX,latX,valX]],
                                         columns=["evoked0","quest0","cond0","chan0","tmin0","tmax0","mode0","chanX","latX","valX"],
@@ -2530,13 +2525,6 @@ class BatchMNE:
                                 tmin0 = timespan0[0]
                                 tmax0 = timespan0[1]
                                 for mode0 in ["pos","neg"]:
-                                    ## chanX,latX,valX = inst1.copy().pick(chan0).get_peak(
-                                    ##     ch_type          = "eeg",
-                                    ##     tmin             = tmin0,
-                                    ##     tmax             = tmax0,
-                                    ##     mode             = mode0,
-                                    ##     return_amplitude = True,
-                                    ## )
                                     smin0,smax0 = inst1.time_as_index([tmin0,tmax0])
                                     chan_data = inst1.copy().pick(chan0).data[0,smin0:smax0]
                                     if mode0 == "neg": chan_data = -chan_data
@@ -2557,6 +2545,15 @@ class BatchMNE:
                                     latX  = latX[0] if latX.size > 0 else np.nan
                                     valX  = valX[0] if valX.size > 0 else np.nan
                                     if mode0 == "neg": valX = -valX
+                                    if stupid:
+                                        chanX,latX,valX = inst1.copy().pick(chan0).get_peak(
+                                            ch_type          = "eeg",
+                                            tmin             = tmin0,
+                                            tmax             = tmax0,
+                                            mode             = mode0,
+                                            return_amplitude = True,
+                                        )
+
                                     df1 = pd.DataFrame(
                                         [[evoked0,quest0,cond0,chan0,tmin0,tmax0,mode0,chanX,latX,valX]],
                                         columns=["evoked0","quest0","cond0","chan0","tmin0","tmax0","mode0","chanX","latX","valX"],
@@ -2638,9 +2635,7 @@ class BatchMNE:
                         ),
                     )
                     fig.set_size_inches(16,8)
-                    if showFig:
-                        (fig or plt).show()
-
+                    if showFig: (fig or plt).show()
                     of_suff = ""
                     of_suff = ".".join([of_suff,str(whoami())])
                     of_suff = ".".join([of_suff,str(quest0)])
@@ -2756,19 +2751,13 @@ class BatchMNE:
                                      & (df0["mode0"]   == "neg")
                         ][["latX","valX"]].to_numpy(copy=True,)
                         facecolors0 = list(colors0.values())
-
-
                         facecolors0 = list(itertools.chain.from_iterable(itertools.repeat(col0, len(colors6)) for col0 in facecolors0))
-
-
-
                         edgecolors0 = colors6*len(colors0)
-                        figs[0].axes[0].scatter(arPos.T[0],arPos.T[1]+0.2,s=48,facecolors=facecolors0,edgecolors=edgecolors0,marker="^",zorder=1200)
-                        figs[0].axes[0].scatter(arNeg.T[0],arNeg.T[1]-0.2,s=48,facecolors=facecolors0,edgecolors=edgecolors0,marker="v",zorder=1200)
+                        temp_dist = 0.0 # 0.2
+                        figs[0].axes[0].scatter(arPos.T[0],arPos.T[1]+temp_dist,s=48,facecolors=facecolors0,edgecolors=edgecolors0,marker="^",zorder=1200)
+                        figs[0].axes[0].scatter(arNeg.T[0],arNeg.T[1]-temp_dist,s=48,facecolors=facecolors0,edgecolors=edgecolors0,marker="v",zorder=1200)
 
-                    if showFig:
-                        (figs[0] or plt).show()
-
+                    if showFig: (figs[0] or plt).show()
                     if saveFig:
                         of_suff = ""
                         of_suff = ".".join([of_suff,str(whoami())])
@@ -2868,9 +2857,7 @@ class BatchMNE:
                 )
                 for ii,fig in enumerate(figs):
                     fig.set_size_inches(16,16)
-                    if showFig:
-                        (fig or plt).show()
-
+                    if showFig: (fig or plt).show()
                     of_suff = ""
                     of_suff = ".".join([of_suff,str(whoami()),epochs0,ica0])
                     of_suff = ".".join([of_suff,"{:03d}".format(ii)])
@@ -3029,9 +3016,7 @@ class BatchMNE:
                             STATUS,
                         )
                         fig.axes[0].set(title=title_new)
-                        if showFig:
-                            (fig or plt).show()
-
+                        if showFig: (fig or plt).show()
                         if saveFig:
                             of_suff = str(self.locs.of_stem)
                             of_suff = ".".join([of_suff,str(whoami()),epochs0,ica0])
