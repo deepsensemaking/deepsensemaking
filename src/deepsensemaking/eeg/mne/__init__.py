@@ -97,6 +97,8 @@ from matplotlib.colors import ListedColormap
 import seaborn as sns
 
 from scipy import ndimage
+from scipy.signal import find_peaks, peak_prominences
+
 
 # plt.ion()
 plt.ioff()
@@ -560,6 +562,12 @@ class BatchMNE:
 
             TODO FIXME add information about RUN in the EVENTS description.
             TODO FIXME CONSIDER better use such merging at the stage of getting paths
+
+            Example use:
+              data = DS0.dataBase
+              data.concatenate_data_by_subject(signals0="raw0",)
+              data.concatenate_data_by_subject(signals0="epochs0",)
+
 
             """
             ## Produce data dictionary
@@ -1138,13 +1146,23 @@ class BatchMNE:
                 if sys.stdout.isatty(): plt.close("all")
 
                 self.extract_PEAKS_from_evoked_to_dataframe(
-                    peaks0     = "peaks0",
+                    df0_peaks0 = "df0_peaks0",
                     evoked0    = "evoked0",
                     chans0     = self.BATCH.dataBase.setup["chans"]["bund1"]["B1"],
                     bunds0     = self.BATCH.dataBase.setup["chans"]["bund0"].items(),
                     timespans0 = list(self.BATCH.dataBase.setup["time"]["spans0"].values()),
                 )
-
+                self.evoked_to_dataframe(
+                    evoked0      = "evoked0",
+                    quest0       = "word_set",
+                    df0_evoked0  = "df0_evoked0_word_set",
+                )
+                self.epochs_to_dataframe(
+                    epochs0     = "epochs0",
+                    events0     = "events0",
+                    meta1       = 'meta1',
+                    df0_epochs0 = "df0_epochs0",
+                )
                 if sys.stdout.isatty(): plt.close("all")
                 chans1 = ["C3","C4","F3","F4","PO3","PO4","O1","O2",]
                 chans2 = ["Fz","Cz","Pz","Oz","CPz","POz","FCz"]
@@ -1165,7 +1183,7 @@ class BatchMNE:
                     vlines7     = self.BATCH.dataBase.setup["time"]["vlines7"],
                     timespans0  = list(self.BATCH.dataBase.setup["time"]["spans0"].values()),
                     colors6     = self.BATCH.dataBase.setup["time"]["colors6"],
-                    peaks0     = "peaks0",
+                    df0_peaks0  = "df0_peaks0",
                 )
                 self.plot_evoked_COMPARE(
                     evoked0     = "evoked0",  # "evoked0" OR "evoked2" OR ...
@@ -1180,7 +1198,7 @@ class BatchMNE:
                     vlines7     = self.BATCH.dataBase.setup["time"]["vlines7"],
                     timespans0  = list(self.BATCH.dataBase.setup["time"]["spans0"].values()),
                     colors6     = self.BATCH.dataBase.setup["time"]["colors6"],
-                    peaks0     = "peaks0",
+                    df0_peaks0  = "df0_peaks0",
                 )
                 if sys.stdout.isatty(): plt.close("all")
 
@@ -1198,9 +1216,10 @@ class BatchMNE:
                 self.drop_BAD_epochs()
 
 
-
+                """
                 self.write_hkl()
                 self.mark_DONE()
+                """
 
                 if cleanup:
                     self.data = OrderedDict()
@@ -1218,20 +1237,6 @@ class BatchMNE:
 
 
 
-
-                self.evoked_to_dataframe(
-                    evoked0      = "evoked0",
-                    quest0  = "word_set",
-                    df0_evoked0  = "df0_evoked0_word_set",
-                )
-
-
-                self.epochs_to_dataframe(
-                    epochs0     = "epochs0",
-                    events0     = "events0",
-                    meta1       = 'meta1',
-                    df0_epochs0 = "df0_epochs0",
-                )
 
 
 
@@ -1794,7 +1799,6 @@ class BatchMNE:
                     yLimVal = [-80,40],
                     suffFig = "",
                     saveFig = True,
-
             ):
                 self.BATCH.logger.info(
                     space0[0]+"RUNNING: {}.{}".format(
@@ -2003,22 +2007,22 @@ class BatchMNE:
                 self.BATCH.logger.info (space0[2]+"these will be kept in pandas DataFrame...")
                 self.BATCH.logger.info (space0[2]+"under meta1: {} key ".format(repr(str( meta1 ))))
 
-                self.data[events0][meta1] = self.data[events0][meta0].copy(deep=True)[
+                df0 = self.data[events0][meta0].copy(deep=True)[
                     (self.data[events0][meta0]["CODE"] > 100) &
                     (self.data[events0][meta0]["CODE"] < 300)
                 ]
                 self.BATCH.logger.info (space0[2]+"computing onset diff column for {}...".format(repr(str(meta1))))
                 self.BATCH.logger.info (space0[2]+"... this (re)computation is requided after...")
                 self.BATCH.logger.info (space0[2]+"... removing events not related to stimuli were dropped...")
-                # self.data[events0][meta1].loc[:,"DIFF"] = self.data[events0][meta1]["ONSET"].diff()
-                self.data[events0][meta1]["DIFF"] = self.data[events0][meta1]["ONSET"].diff()
-                self.data[events0][meta1]["DIFF"].fillna(0,inplace=True)
+                # df0.loc[:,"DIFF"] = df0["ONSET"].diff()
+                df0["DIFF"] = df0["ONSET"].diff()
+                df0["DIFF"].fillna(0,inplace=True)
 
                 self.BATCH.logger.info (space0[1]+"merging event details in {} with extra info from SETUP...".format(repr(str( meta1 ))))
                 self.BATCH.logger.info (space0[2]+"these will be kept in pandas DataFrame...")
                 self.BATCH.logger.info (space0[2]+"under meta1: {} key ".format(repr(str( meta1 ))))
-                self.data[events0][meta1] = pd.merge(
-                    left      = self.data[events0][meta1],
+                df0 = pd.merge(
+                    left      = df0,
                     right     = self.BATCH.dataBase.setup["events"]["dgn0"],
                     how       = "left",
                     left_on   = "CODE",
@@ -2029,25 +2033,16 @@ class BatchMNE:
                     indicator = False,
                     validate  = "m:1",
                 )
-                self.BATCH.logger.info (space0[2]+"adding extra columns (STEM,SUB,RUN,TASK) to {}...".format(repr(str( meta1 ))))
-                self.data[events0][meta1]["STEM"] = str(self.locs.of_stem)
-                self.data[events0][meta1]["SUB"]  = get_bids_prop(if_name=str(self.locs.of_stem),prop="sub",)
-                self.data[events0][meta1]["RUN"]  = get_bids_prop(if_name=str(self.locs.of_stem),prop="run",)
-                self.data[events0][meta1]["TASK"] = get_bids_prop(if_name=str(self.locs.of_stem),prop="task",)
-
-
-                                    df1["SUB"]  = self.sub
-                                    df1["SES"]  = self.ses
-                                    df1["TASK"] = self.task
-                                    df1["RUN"]  = self.run
-
-
-
-
+                self.BATCH.logger.info (space0[2]+"adding extra columns (STEM,SUB,SES,TASK,RUN) to {}...".format(repr(str( meta1 ))))
+                # df0["STEM"] = str(self.locs.of_stem)
+                df0["SUB"]  = self.sub
+                df0["SES"]  = self.ses
+                df0["TASK"] = self.task
+                df0["RUN"]  = self.run
                 self.BATCH.logger.info (space0[1]+"exporting event onset information from {}...".format(repr(str(meta1))))
                 self.BATCH.logger.info (space0[2]+"these will be kept under time1: {} key..."   .format(repr(str(time1))))
 
-                self.data[events0][time1] = self.data[events0][meta1][["ONSET","DURATION","CODE",]].to_numpy()
+                self.data[events0][time1] = df0[["ONSET","DURATION","CODE",]].to_numpy()
 
 
                 self.BATCH.logger.info (space0[1]+"producing exclusively stimuli-related events descriptions...")
@@ -2058,8 +2053,10 @@ class BatchMNE:
                         self.data[events0][desc1][key0] = val0
 
                 self.BATCH.logger.info (space0[1]+"checking assertions...")
-                # assert len(self.data[events0][meta1]) == 80       , "PROBLEM: Please fix meta1"
-                assert len(self.data[events0][meta1]) in [80,160,240,320]       , "PROBLEM: Please fix meta1"
+                # assert len(df0) == 80       , "PROBLEM: Please fix meta1"
+                assert len(df0) in [80,160,240,320]       , "PROBLEM: Please fix meta1"
+
+                self.data[events0][meta1] = dc(df0)
                 # assert len(self.data[events0][desc1]) == 80       , "PROBLEM: Please fix desc1"
                 # assert self.data[events0][time1].shape == (80, 3) , "PROBLEM: Please fix time1"
                 self.BATCH.logger.info (space0[1]+"all assertions were met... GREAT!")
@@ -2176,7 +2173,7 @@ class BatchMNE:
 
             def inspect_epochs(
                     self,
-                    epochs0    = "epochs0",
+                    epochs0,     # epochs0    = "epochs0",
                     excludeBAD = True,
             ):
                 self.BATCH.logger.info(
@@ -2390,8 +2387,8 @@ class BatchMNE:
 
             def construct_evoked_WORD_SET(
                     self,
-                    evoked0,
-                    epochs0,
+                    evoked0, # evoked0 = "evoked0",
+                    epochs0, # epochs0 = "epochs0",
             ):
                 self.BATCH.logger.info(
                     space0[0]+"RUNNING: {}.{}".format(
@@ -2416,8 +2413,8 @@ class BatchMNE:
 
             def construct_evoked_WORD_LEN(
                     self,
-                    evoked0,
-                    epochs0,
+                    evoked0, # evoked0 = "evoked0",
+                    epochs0, # epochs0 = "epochs0",
             ):
                 self.BATCH.logger.info(
                     space0[0]+"RUNNING: {}.{}".format(
@@ -2440,11 +2437,11 @@ class BatchMNE:
 
             def extract_PEAKS_from_evoked_to_dataframe(
                     self,
-                    peaks0,     # "peaks0"
-                    evoked0,    # "evoked2"
-                    chans0,     # self.BATCH.dataBase.setup["chans"]["bund1"]["B1"]
-                    bunds0,     # self.BATCH.dataBase.setup["chans"]["bund0"].items()
-                    timespans0, # list(self.BATCH.dataBase.setup["time"]["spans0"].values())
+                    df0_peaks0, # df0_peaks0 = "df0_peaks0",
+                    evoked0,    # evoked0    = "evoked2",
+                    chans0,     # chans0     = self.BATCH.dataBase.setup["chans"]["bund1"]["B1"],
+                    bunds0,     # bunds0     = self.BATCH.dataBase.setup["chans"]["bund0"].items(),
+                    timespans0, # timespans0 = list(self.BATCH.dataBase.setup["time"]["spans0"].values()),
             ):
                 self.BATCH.logger.info(
                     space0[0]+"RUNNING: {}.{}".format(
@@ -2453,12 +2450,12 @@ class BatchMNE:
                 ))
                 self.BATCH.logger.info (space0[1]+"extracting peaks from evoked for some data channels accross conditions")
                 self.BATCH.logger.info (space0[1]+"processing: {}".format(repr(str( self        ))))
-                self.BATCH.logger.info (space0[1]+"peaks0: {}"    .format(repr(str( peaks0      ))))
+                self.BATCH.logger.info (space0[1]+"df0_peaks0: {}"    .format(repr(str( df0_peaks0      ))))
                 self.BATCH.logger.info (space0[1]+"evoked0: {}"   .format(repr(str( evoked0     ))))
                 self.BATCH.logger.info (space0[1]+"chans0: {}"    .format(repr(str( chans0      ))))
                 self.BATCH.logger.info (space0[1]+"bunds0: {}"    .format(repr(str( bunds0      ))))
                 self.BATCH.logger.info (space0[1]+"timespans0: {}".format(repr(str( timespans0  ))))
-                self.data[peaks0] = None
+                self.data[df0_peaks0] = None
                 df0 = pd.DataFrame(
                     [],
                     columns=["evoked0","quest0","cond0","chan0","tmin0","tmax0","mode0","chanX","latX","valX"],
@@ -2473,23 +2470,45 @@ class BatchMNE:
                                 tmin0 = timespan0[0]
                                 tmax0 = timespan0[1]
                                 for mode0 in ["pos","neg"]:
-                                    chanX,latX,valX = val0.copy().pick(chan0).get_peak(
-                                        ch_type          = "eeg",
-                                        tmin             = tmin0,
-                                        tmax             = tmax0,
-                                        mode             = mode0,
-                                        return_amplitude = True,
+                                    ## chanX,latX,valX = val0.copy().pick(chan0).get_peak(
+                                    ##     ch_type          = "eeg",
+                                    ##     tmin             = tmin0,
+                                    ##     tmax             = tmax0,
+                                    ##     mode             = mode0,
+                                    ##     return_amplitude = True,
+                                    ## )
+                                    smin0,smax0 = val0.time_as_index([tmin0,tmax0])
+                                    chan_data = val0.copy().pick(chan0).data[0,smin0:smax0]
+                                    if mode0 == "neg": chan_data = -chan_data
+                                    chan_peak,_ = find_peaks(
+                                        x            = chan_data,
+                                        height       = None,
+                                        threshold    = None,
+                                        distance     = 40000,
+                                        prominence   = None,
+                                        width        = None,
+                                        wlen         = None,
+                                        rel_height   = 0.5,
+                                        plateau_size = None,
                                     )
+                                    chanX = chan0
+                                    latX  = val0.times[chan_peak+smin0]
+                                    valX  = chan_data[chan_peak]
+                                    latX  = latX[0] if latX.size > 0 else np.nan
+                                    valX  = valX[0] if valX.size > 0 else np.nan
+                                    if mode0 == "neg": valX = -valX
                                     df1 = pd.DataFrame(
                                         [[evoked0,quest0,cond0,chan0,tmin0,tmax0,mode0,chanX,latX,valX]],
                                         columns=["evoked0","quest0","cond0","chan0","tmin0","tmax0","mode0","chanX","latX","valX"],
                                     )
                                     df1["valX"] = df1["valX"]*1e6
+                                    # df1["STEM"] = str(self.locs.of_stem)
                                     df1["SUB"]  = self.sub
                                     df1["SES"]  = self.ses
                                     df1["TASK"] = self.task
                                     df1["RUN"]  = self.run
                                     df0 = df0.append(df1)
+
 
                         inst0     = dc(val0)
                         bunds0idx = OrderedDict()
@@ -2498,6 +2517,8 @@ class BatchMNE:
                             self.BATCH.logger.info (space0[2]+"bunds0 key2: {}".format(repr(str( key2 ))))
                             self.BATCH.logger.info (space0[2]+"bunds0 val2: {}".format(repr(str( val2 ))))
                             bunds0idx[key2] = mne.pick_channels(inst0.info['ch_names'], val2 )
+
+                        ## TODO FIXME CONSIDER avoiding code repetition and use combine_channels for every single channel
                         inst1 = mne.channels.combine_channels(
                             inst   = inst0,
                             groups = bunds0idx,
@@ -2509,37 +2530,65 @@ class BatchMNE:
                                 tmin0 = timespan0[0]
                                 tmax0 = timespan0[1]
                                 for mode0 in ["pos","neg"]:
-                                    chanX,latX,valX = inst1.copy().pick(chan0).get_peak(
-                                        ch_type          = "eeg",
-                                        tmin             = tmin0,
-                                        tmax             = tmax0,
-                                        mode             = mode0,
-                                        return_amplitude = True,
+                                    ## chanX,latX,valX = inst1.copy().pick(chan0).get_peak(
+                                    ##     ch_type          = "eeg",
+                                    ##     tmin             = tmin0,
+                                    ##     tmax             = tmax0,
+                                    ##     mode             = mode0,
+                                    ##     return_amplitude = True,
+                                    ## )
+                                    smin0,smax0 = inst1.time_as_index([tmin0,tmax0])
+                                    chan_data = inst1.copy().pick(chan0).data[0,smin0:smax0]
+                                    if mode0 == "neg": chan_data = -chan_data
+                                    chan_peak,_ = find_peaks(
+                                        x            = chan_data,
+                                        height       = None,
+                                        threshold    = None,
+                                        distance     = 40000,
+                                        prominence   = None,
+                                        width        = None,
+                                        wlen         = None,
+                                        rel_height   = 0.5,
+                                        plateau_size = None,
                                     )
+                                    chanX = chan0
+                                    latX  = inst1.times[chan_peak+smin0]
+                                    valX  = chan_data[chan_peak]
+                                    latX  = latX[0] if latX.size > 0 else np.nan
+                                    valX  = valX[0] if valX.size > 0 else np.nan
+                                    if mode0 == "neg": valX = -valX
                                     df1 = pd.DataFrame(
                                         [[evoked0,quest0,cond0,chan0,tmin0,tmax0,mode0,chanX,latX,valX]],
                                         columns=["evoked0","quest0","cond0","chan0","tmin0","tmax0","mode0","chanX","latX","valX"],
                                     )
                                     df1["valX"] = df1["valX"]*1e6
+                                    # df1["STEM"] = str(self.locs.of_stem)
                                     df1["SUB"]  = self.sub
                                     df1["SES"]  = self.ses
                                     df1["TASK"] = self.task
                                     df1["RUN"]  = self.run
                                     df0 = df0.append(df1)
 
-                self.data[peaks0] = dc(df0)
+                di0 = self.BATCH.dataBase.setup["chans"]["bund0"]
+                di1 = OrderedDict()
+                for key0,val0 in di0.items():
+                    for item in val0:
+                        di1[item] = key0
+
+                df0["CHAN_BUND"] = df0["chan0"].apply(lambda x: di1[x] if x in di1 else None)
+                self.data[df0_peaks0] = dc(df0)
 
 
 
 
             def plot_evoked_JOINT(
                     self,
-                    evoked0,
-                    quest0,
-                    apply_projections = True,
-                    interpolate_bads  = True,
-                    showFig           = False,
-                    suffFig           = "",
+                    evoked0,                  # evoked0           = "evoked0",  # OR "evoked2" OR ...
+                    quest0,                   # quest0            = "word_set", # OR "word_len"
+                    apply_projections = True, # apply_projections = True,
+                    interpolate_bads  = True, # interpolate_bads  = True,
+                    showFig           = False,# showFig           = False,
+                    suffFig           = "",   # suffFig           = "",
             ):
                 self.BATCH.logger.info(
                     space0[0]+"RUNNING: {}.{}".format(
@@ -2581,6 +2630,7 @@ class BatchMNE:
                             time_unit      = "s",
                             ylim           = dict(eeg=[-15, 15]),
                             spatial_colors = spatial_colors,
+                            gfp            = True,
                         ),
                         topomap_args = dict(
                             cmap     = "Spectral_r",
@@ -2608,23 +2658,20 @@ class BatchMNE:
 
             def plot_evoked_COMPARE(
                     self,
-                    evoked0,            # "evoked0" OR "evoked2" OR ...
-                    quest0,             # "word_set" OR "word_len"
-                    chans0      = None, #
-                    # chans0,           # ["C3","C4","F3","F4","PO3","PO4","O1","O2",]
-                    # chans0,           # ['Fz', 'Cz', 'Pz', 'Oz', 'CPz', 'POz', 'FCz']
-                    # chans0,           # self.BATCH.dataBase.setup["chans"]["bund1"]["B1"]
-                    bunds0      = None, # self.BATCH.dataBase.setup["chans"]["bund0"]
-                    showFig     = False,
-                    saveFig     = True,
-                    suffFig     = "",
-                    colors0     = None, # self.BATCH.dataBase.setup["colors0"]["word_set"]
-                    styles0     = None, # self.BATCH.dataBase.setup["colors0"]["word_set"]
-                    linestyles0 = None, # self.BATCH.dataBase.setup["colors0"]["word_set"]
-                    vlines7     = [0],  # self.BATCH.dataBase.setup["time"]["vlines7"]
-                    timespans0  = None, # list(self.BATCH.dataBase.setup["time"]["spans0"].values())
-                    colors6     = None, # self.BATCH.dataBase.setup["time"]["colors6"]
-                    peaks0      = None, # "peaks0"
+                    evoked0,             # evoked0     = "evoked0",  # OR "evoked2" OR ...
+                    quest0,              # quest0      = "word_set", # OR "word_len"
+                    chans0      = None,  # chans0      = self.BATCH.dataBase.setup["chans"]["bund1"]["B1"],
+                    bunds0      = None,  # bunds0      = self.BATCH.dataBase.setup["chans"]["bund0"],
+                    showFig     = False, # showFig     = False,
+                    saveFig     = True,  # saveFig     = True,
+                    suffFig     = "",    # suffFig     = "",
+                    colors0     = None,  # colors0     = self.BATCH.dataBase.setup["colors0"]["word_set"],
+                    styles0     = None,  # styles0     = self.BATCH.dataBase.setup["styles0"]["word_set"],
+                    linestyles0 = None,  # linestyles0 = self.BATCH.dataBase.setup["linestyles0"]["word_set"],
+                    vlines7     = [0],   # vlines7     = self.BATCH.dataBase.setup["time"]["vlines7"],
+                    timespans0  = None,  # timespans0  = list(self.BATCH.dataBase.setup["time"]["spans0"].values()),
+                    colors6     = None,  # colors6     = self.BATCH.dataBase.setup["time"]["colors6"],
+                    df0_peaks0  = None,  # df0_peaks0  = "df0_peaks0",
             ):
                 self.BATCH.logger.info(
                     space0[0]+"RUNNING: {}.{}".format(
@@ -2684,11 +2731,17 @@ class BatchMNE:
                         ## convert timespans (t0,t1) to start and duration
                         params0 = [ [time0[0],time0[1]-time0[0]] for time0 in timespans0 ]
                         for ii,param0 in enumerate(params0):
-                            rect0 = matplotlib.patches.Rectangle([param0[0],-12],param0[1],24,angle=0.0,color=colors6[ii],alpha=0.1,)
+                            rect0 = matplotlib.patches.Rectangle(
+                                [param0[0],-12],
+                                param0[1],
+                                24,
+                                angle=0.0,
+                                color=colors6[ii],
+                                alpha=0.3,)
                             figs[0].axes[0].add_patch(rect0)
 
-                    if peaks0 is not None:
-                        df0 = dc(self.data["peaks0"])
+                    if df0_peaks0 is not None:
+                        df0 = dc(self.data[df0_peaks0])
                         ## TODO FIXME CONSIDER if sorting is necessary here to reflect figs[0] order of stuff
                         arPos = df0[ True
                                      & (df0["evoked0"] == evoked0)
@@ -3158,16 +3211,28 @@ class BatchMNE:
 
                 df0 = pd.DataFrame()
 
-                for ii,(key0,val0) in enumerate(self.data[evoked0][quest0].items()):
-                    assert isinstance(val0, mne.evoked.Evoked), "PROBLEM: all items in evoked0 should be an instance of mne.evoked.Evoked"
-                    temp0 =  val0.to_data_frame(
+                for ii,(cond0_key0,cond0_val0) in enumerate(self.data[evoked0][quest0].items()):
+                    assert isinstance(cond0_val0, mne.evoked.Evoked), "PROBLEM: all items in evoked0 should be an instance of mne.evoked.Evoked"
+                    temp0 =  cond0_val0.to_data_frame(
                         time_format=None,
                         long_format=True,
                     )
-                    temp0["STEM"] = str(self.locs.of_stem)
-                    temp0["KEY"]  = key0
-                    self.BATCH.logger.info (space0[1]+"PROC: " + str(key0))
+                    # temp0["STEM"] = str(self.locs.of_stem)
+                    temp0["SUB"]  = self.sub
+                    temp0["SES"]  = self.ses
+                    temp0["TASK"] = self.task
+                    temp0["RUN"]  = self.run
+                    temp0["COND"] = cond0_key0
+                    self.BATCH.logger.info (space0[1]+"PROC: " + str(cond0_key0))
                     df0 = df0.append(temp0)
+
+                di0 = self.BATCH.dataBase.setup["chans"]["bund0"]
+                di1 = OrderedDict()
+                for key0,val0 in di0.items():
+                    for item in val0:
+                        di1[item] = key0
+
+                df0["CHAN_BUND"] = df0["channel"].apply(lambda x: di1[x] if x in di1 else None)
 
                 self.data[df0_evoked0] = dc(df0)
 
