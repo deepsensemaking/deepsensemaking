@@ -1,0 +1,262 @@
+
+
+
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var EMACS_BUFFER_DIR=(file-name-directory buffer-file-name) :tangle yes
+"""
+If present BAD channels SHOULD be loaded during the SECOND RUN
+"""
+self.check_BAD_chans_file(
+    raw0 = "raw0",
+)
+self.add_actual_reference(
+    raw0          = "raw0",
+    ref_chans_OLD = self.BATCH.dataBase.setup["chans"]["refs"],
+)
+
+
+
+
+                ## currently BAD spans checkup is deprecated,
+                ## instead in the following steps epoched data
+                ## will be cleaned using ICA and amplitude thresholds...
+
+                self.BATCH.logger.info("checking for bad spans")
+                self.check_for_BAD_spans_file()
+
+
+
+                ## currently manual inspection of RAW (continous)
+                ## data is deprecated
+                ## instead, epoched data will be inspected
+                ## in following steps and
+                ## it will be cleaned using ICA and amplitude thresholds...
+                ## ALSO: BAD spans data should not be loaded OR written
+
+                if sys.stdout.isatty(): plt.close("all")
+                self.BATCH.logger.info("plot RAW data timeseries for MANUAL INSPECTION")
+                self.plot_raw_data_timeseries(total=False,exclude=False,)
+                if ASK & sys.stdout.isatty(): input(temp_continue)
+                if sys.stdout.isatty(): plt.close("all")
+                self.BATCH.logger.info("save BAD spans after MANUAL INSPECTION ")
+                self.export_BAD_spans_info()
+
+
+                self.check_BAD_epochs_file(
+                    epochs0 = "epochs0",
+                )
+
+
+                self.drop_BAD_epochs()
+
+
+
+
+#+END_SRC
+
+
+
+
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var EMACS_BUFFER_DIR=(file-name-directory buffer-file-name) :tangle yes
+
+
+            def check_BAD_chans_file(
+                    self,
+                    raw0,
+            ):
+                self.BATCH.logger.info(
+                    space0[0]+"RUNNING: {}.{}".format(
+                        ".".join(self.INSP),
+                        str(whoami()),
+                ))
+                self.BATCH.logger.info (space0[1]+"checking BAD channels information file...")
+                self.BATCH.logger.info (space0[1]+"processing: {}".format(repr(str( self ))))
+                self.BATCH.logger.info (space0[1]+"raw0: {}"      .format(repr(str( raw0 ))))
+                bad_names    = list()
+                of_BAD_chans = self.locs.of_BAD_chans
+                self.BATCH.logger.debug(space0[1]+"looking for of_BAD_chans: {}".format(repr(str(of_BAD_chans))))
+                if os.path.exists(of_BAD_chans):
+                    self.BATCH.logger.info(space0[1]+"found BAD channels file...")
+                    with open(of_BAD_chans) as fh:
+                        for line in fh:
+                            line = line.split('#',1,)[0].strip()
+                            if line:
+                                bad_names.append(line)
+
+                else:
+                    self.BATCH.logger.info(space0[1]+"BAD channels file NOT found...")
+
+                if bad_names:
+                    self.BATCH.logger.info (space0[1]+"bad_names: {}".format(str(bad_names)))
+                    self.BATCH.logger.info(space0[1]+"adding BAD channels informtion to raw data")
+                    self.data[raw0].info['bads'] += bad_names
+
+                    self.BATCH.logger.info(space0[1]+"uniquifying bad channels info")
+                    self.data[raw0].info['bads'] = list(set(self.data[raw0].info['bads']))
+
+                else:
+                    self.BATCH.logger.warning(space0[1]+"bad_names: {}".format(str(bad_names)))
+
+
+
+
+
+
+
+
+            def export_BAD_spans_info(self,raw0="raw0"):
+                self.BATCH.logger.info(
+                    space0[0]+"RUNNING: {}.{}".format(
+                        ".".join(self.INSP),
+                        str(whoami()),
+                ))
+                self.BATCH.logger.info (space0[1]+"exporting BAD spans annotation data to a CSV file...")
+                self.BATCH.logger.info (space0[1]+"processing: {}".format(repr(str( self    ))))
+                self.BATCH.logger.info (space0[1]+"raw0: {}"      .format(repr(str( raw0    ))))
+
+                self.BATCH.logger.info (space0[1]+"extracting BAD spans from RAW data annotations...")
+                self.BATCH.logger.info (space0[1]+"for synchronization putpose 0th annot is also included...")
+                bads_annot1 = [0]+[ii for ii,an in enumerate(self.data[raw0].annotations) if an['description'].lower().startswith("bad")]
+
+                of_suff0 = ""
+                of_suff0 = ".".join([of_suff0,str(whoami()),raw0])
+                of_suff1 = ".".join([of_suff0,"annots1","BAD_spans","csv"])
+                of_suff2 = ".".join([of_suff0,"annots2","NEW_check","csv"])
+                of_name0 = str(self.locs.of_BAD_spans)
+                of_name1 = str(self.locs.of_base.with_suffix(of_suff1))
+                of_name2 = str(self.locs.of_base.with_suffix(of_suff2))
+
+                self.BATCH.logger.info (space0[1]+"of_name0: {}".format(repr(str(of_name0))))
+                self.BATCH.logger.info (space0[1]+"of_name1: {}".format(repr(str(of_name1))))
+                self.BATCH.logger.info (space0[1]+"of_name2: {}".format(repr(str(of_name2))))
+
+                self.data[raw0].annotations[bads_annot1].save(of_name0)
+                self.data[raw0].annotations[bads_annot1].save(of_name1)
+                self.data[raw0].annotations[          :].save(of_name2)
+
+
+
+
+            def check_for_BAD_spans_file(
+                    self,
+                    raw0    = "raw0",
+                    annots1 = "annots1",
+            ):
+                self.BATCH.logger.info(
+                    space0[0]+"RUNNING: {}.{}".format(
+                        ".".join(self.INSP),
+                        str(whoami()),
+                ))
+                self.BATCH.logger.info (space0[1]+"checking for BAD spans...")
+                self.BATCH.logger.info (space0[1]+"processing: {}".format(repr(str( self    ))))
+                self.BATCH.logger.info (space0[1]+"raw0: {}"      .format(repr(str( raw0    ))))
+                self.BATCH.logger.info (space0[1]+"annots1: {}"   .format(repr(str( annots1 ))))
+
+                of_BAD_spans = self.locs.of_BAD_spans
+                self.BATCH.logger.debug(space0[1]+"looking for of_BAD_spans: {}".format(repr(str(of_BAD_spans))))
+
+                # of_annot1 = str(self.locs.of_base.with_suffix(".raw0.annots1.bad_spans.csv"))
+                # self.BATCH.logger.info (space0[1]+"looking for of_annot1: "    + str(of_annot1))
+
+                if os.path.exists(of_BAD_spans):
+                    self.BATCH.logger.info (space0[2]+"found BAD span annottions file!")
+                    self.BATCH.logger.info (space0[2]+"getting BAD span annots data")
+                    self.BATCH.logger.info (space0[2]+"EXEC: {}" .format("mne.read_annotations()"))
+                    self.data[annots1]              = OrderedDict()
+                    self.data[annots1]["bad_spans"] = mne.read_annotations(
+                        of_BAD_spans,
+                    )
+                    self.BATCH.logger.info (space0[2]+"adding BAD span annots to {} data".format(repr(str(raw0))))
+                    self.BATCH.logger.info (space0[2]+"EXEC: {}[{}].{}".format(".".join(self.INSP),repr(raw0),"set_annotations(OLD+NEW)"))
+                    self.data[raw0].set_annotations(
+                        self.data[raw0].annotations + self.data[annots1]["bad_spans"],
+                    )
+                    self.BATCH.logger.info (space0[1]+"ALL GOOD...")
+                else:
+                    self.BATCH.logger.info (space0[1]+"file not found")
+                    self.BATCH.logger.info (space0[1]+"annots1 were NOT updated")
+                    self.BATCH.logger.info (space0[1]+"it is OK during the first run")
+
+
+
+
+
+
+            def check_BAD_epochs_file(
+                    self,
+                    epochs0,
+            ):
+                self.BATCH.logger.info(
+                    space0[0]+"RUNNING: {}.{}".format(
+                        ".".join(self.INSP),
+                        str(whoami()),
+                ))
+                self.BATCH.logger.info (space0[1]+"checking BAD epochs information file...")
+                self.BATCH.logger.info (space0[1]+"processing: {}".format(repr(str( self    ))))
+                self.BATCH.logger.info (space0[1]+"epochs0: {}"   .format(repr(str( epochs0 ))))
+
+                bad_epochs = list()
+                of_BAD_epochs   = self.locs.of_BAD_epochs
+                self.BATCH.logger.debug(space0[2]+"looking for of_BAD_epochs: {}".format(repr(str(of_BAD_epochs))))
+                if os.path.exists(of_BAD_epochs):
+                    self.BATCH.logger.info(space0[2]+"found bad epochs file...")
+                    with open(of_BAD_epochs) as fh:
+                        for line in fh:
+                            line = line.split('#',1,)[0].strip()
+                            if line:
+                                bad_epochs.append(int(line))
+
+                bad_epochs = list(set(bad_epochs))
+                self.BATCH.logger.info (space0[2]+"bad_epochs: {}".format(repr(str(bad_epochs))))
+                if bad_epochs:
+                    self.BATCH.logger.info(space0[1]+"adding BAD epochs informtion to data")
+                    self.data[epochs0].drop(bad_epochs)
+                    ## TODO FIXME check if this truely operates inplace (in-place)
+
+
+
+            def drop_BAD_epochs(
+                    self,
+                    epochs0 = "epochs0",
+                    reject  = "setup",
+                    flat    = "setup",
+
+            ):
+                self.BATCH.logger.info(
+                    space0[0]+"RUNNING: {}.{}".format(
+                        ".".join(self.INSP),
+                        str(whoami()),
+                ))
+                self.BATCH.logger.info (space0[1]+"dropping epochs marked as BAD")
+                self.BATCH.logger.info (space0[1]+"processing: {}".format(repr(str( self    ))))
+                self.BATCH.logger.info (space0[1]+"epochs0: {}"   .format(repr(str( epochs0 ))))
+
+                if reject == "setup":
+                    reject = self.BATCH.dataBase.setup["params"]["reject"]
+
+                if flat == "setup":
+                    flat = self.BATCH.dataBase.setup["params"]["flat"]
+
+                self.BATCH.logger.info (space0[1]+"reject: {}".format(repr(str( reject ))))
+                self.BATCH.logger.info (space0[1]+"flat: {}"  .format(repr(str( flat   ))))
+
+                ARGS = dict(
+                    reject   = reject,
+                    flat     = flat,
+                )
+                for line in str_dict(ARGS,space0[1]+"ARGS",max_level=0,max_len=42,tight=True,).split("\n"): self.BATCH.logger.info(line)
+                self.data[epochs0].drop_bad(
+                      **ARGS,
+                )
+                self.BATCH.logger.info (space0[1]+"DONE with epochs dropping...")
+                ## TODO FIXME check if this truely operates inplace (in-place)
+
+
+
+
+
+
+
+
+
+
+#+END_SRC

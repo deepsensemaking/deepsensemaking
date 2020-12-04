@@ -73,7 +73,7 @@ def reduce_dict(in_dict,max_level=None,):
     return impl(in_dict, reducer_seed, 0)
 
 
-def str_dict(in_dict,name="in_dict",max_level=None,disp_vals="some",disp_types="some",max_len=42,):
+def str_dict(in_dict,name="in_dict",max_level=None,disp_vals="some",disp_types="some",max_len=42,tight=False):
     """
     Example usage:
     ==============
@@ -136,6 +136,9 @@ def str_dict(in_dict,name="in_dict",max_level=None,disp_vals="some",disp_types="
         out_str += str(val_str)
         out_str += str(type_str)
         out_str += "\n"
+        if tight:
+            out_str = "".join( [line+"\n" for line in out_str.split("\n") if line.strip() != ''] )
+
     return out_str
 
 
