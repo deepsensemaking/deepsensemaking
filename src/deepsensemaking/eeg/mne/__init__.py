@@ -169,10 +169,31 @@ space1 = [ "\n" , "\n  " , "\n    " , "\n      " , ]
 
 
 class BatchMNE:
-    """MNE batch job class"""
+    """MNE batch job class...
+    (AKA: duct-tape and cable-ties for EEG preprocessing)
+    Example usage:
 
+      DS0 = BatchMNE(
+          objName     = "DS0",
+          sourceDir   = "../../rawdata",
+          targetDir   = "../../derivatives/preproc002/JOB_000",
+          globSuffix  = "sub-*/ses-*/eeg/sub-*_task-lexdec_run-*.vhdr",
+          doneSuffix  = ".JOB_000.DONE",
+          setupFile   = "../../rawdata/misc/setup.json",
+          stimuliFile = "../../rawdata/stimuli/task-lexdec_stimuli.MNE.csv",
+          verbose     = 0,
+      )
 
+      DS0.dataBase.setup.read()
 
+      DS0.inputPaths.glob()
+      DS0.inputPaths.select("selector__keep_subjects_004.txt",mode="keep")
+      DS0.dataBase.get_paths()
+      DS0.info()
+
+      DS0.dataBase.info()
+
+    """
 
     def __init__(
             self,
@@ -1347,9 +1368,9 @@ class BatchMNE:
 
             def read_raw_data(
                     self,
-                    raw0,
-                    preload = True,
-                    verbose = None,
+                    raw0,           # raw0    = "raw0",
+                    preload = True, # preload = True,
+                    verbose = None, # verbose = None,
             ):
                 self.BATCH.logger.info(
                     space0[0]+"RUNNING: {}.{}".format(
@@ -1385,7 +1406,7 @@ class BatchMNE:
                 ## Re-create dictionary
                 ## Start from the scratch
                 ## because fresh raw data is being loaded
-                self.BATCH.logger.info (space0[1]+"re-creating data dictionary...")
+                self.BATCH.logger.info (space0[1]+"data dictionary REGENERATION...")
                 self.data = OrderedDict()
 
                 self.BATCH.logger.info (space0[1]+"loading data...")
@@ -1582,8 +1603,8 @@ class BatchMNE:
 
             def average_reference_projection(
                     self,
-                    raw0,
-                    ref_chans_NEW,
+                    raw0,          # raw0          = "raw0",
+                    ref_chans_NEW, # ref_chans_NEW = "average",
             ):
                 self.BATCH.logger.info(
                     space0[0]+"RUNNING: {}.{}".format(
@@ -2810,6 +2831,9 @@ class BatchMNE:
                     random_states = [0]
 
 
+                ## TODO FIXME
+                # run_ica('infomax', fit_params=dict(extended=True))
+
                 time_T0 = time.time()
                 self.data[ica0] = mne.preprocessing.ica.ICA(
                     n_components       = n_components,
@@ -2817,7 +2841,7 @@ class BatchMNE:
                     # n_pca_components   = 50,
                     # max_pca_components = 50,
                     method             = 'fastica',
-                    max_iter           = 1600,
+                    max_iter           = 3200,
                     # noise_cov          = noise_cov,
                     random_state       = random_states[0],
                 ).fit(
