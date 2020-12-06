@@ -97,7 +97,7 @@ def str_dict(in_dict,name="in_dict",max_level=None,disp_vals="some",disp_types="
             elif isinstance(val,(regex_pattern,)):
                 val_str = " = " + repr_func(val)
             elif isinstance(val,(list,tuple,set,)):
-                val_str = " = " + repr_func(val).replace(" ", "")
+                val_str = " = " + repr_func(val).replace(", ", ",")
             elif isinstance(val,(int,float,complex,)):
                 val_str = " = " + repr_func(val)
             elif val is None:
@@ -105,13 +105,13 @@ def str_dict(in_dict,name="in_dict",max_level=None,disp_vals="some",disp_types="
             elif isinstance(val,(types.FunctionType,types.BuiltinFunctionType,functools.partial,)):
                 val_str = " # " + val.__repr__()
             elif isinstance(val, (np.ndarray, np.generic,) ):
-                val_str = " # " + val.__repr__().replace(" ", "")
+                val_str = " # " + val.__repr__().replace(", ", ",")
             elif isinstance(val, (pd.DataFrame,) ):
                 val_str = " # DF"
                 if disp_vals == "all":
                     val_str = " # DF\n" + val.__repr__()
             elif isinstance(val, (dt.date,dt.time,dt.datetime,) ):
-                val_str = " # " + val.__repr__().replace(" ", "")
+                val_str = " # " + val.__repr__().replace(", ", ",")
             else:
                 val_str = " # " + repr_func(val)
             # REPLACEMENTS

@@ -1,5 +1,89 @@
 
 
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var EMACS_BUFFER_DIR=(file-name-directory buffer-file-name) :tangle yes
+
+
+        def concatenate_data_by_subject(self,signals0="signals0",reload=True,cleanup=True):
+            """
+            Merge datasets
+            This is a quick-fix (quick-hack) implemented here
+            because in the initial pipeline design each run was
+            preprocessed/analysed separately, however
+
+            TODO FIXME add information about RUN in the EVENTS description.
+            TODO FIXME CONSIDER better use such merging at the stage of getting paths
+
+            Example use:
+              data = DS0.dataBase
+              data.concatenate_data_by_subject(signals0="raw0",)
+              data.concatenate_data_by_subject(signals0="epochs0",)
+
+
+            """
+            ## Produce data dictionary
+            ## - keys are based on subject codes
+            ## - values contain lists that in turn contain
+            ##   indices of datasets for a given subject
+            self.group_by_subject = OrderedDict()
+            for idx0,item0 in enumerate(self.data):
+                self.BATCH.logger.info (space0[1]+"looking at dataset {:03d}: {}".format(idx0,item0.locs.of_stem))
+                self.BATCH.logger.debug(space0[2]+"sub        : {}".format(item0.sub))
+                self.BATCH.logger.debug(space0[2]+"run        : {}".format(item0.run))
+                self.BATCH.logger.debug(space0[2]+"concatBool : {}".format(item0.concatBool))
+                ## check if item is an original recording
+                ## not a concatenation
+                if not item0.concatBool:
+                    ## check if subject for this item is already used as a key
+                    if not item0.sub in list(self.group_by_subject.keys()):
+                        self.group_by_subject[item0.sub] = list()
+
+                    ## append index for this item to list sored in dict value
+                    self.group_by_subject[item0.sub].append(idx0)
+
+            ## Construct new datasets
+            ## - iterating over subjects
+            for sub0,list0 in self.group_by_subject.items():
+                ## - get the first item
+                ## - use it as a templete for the contcatenated dataset
+                item0 = self.data[list0[0]]
+                ## - make run-000
+                ##   - TODO FIXME add regex here to facilitate
+                if_path = pathlib.Path(str(item0.locs.if_path).replace("_run-001","_run-000",))
+                self.data.append(
+                    self.DataSet(
+                        BATCH      = self.BATCH,
+                        INSP       = self.INSP ,
+                        item       = if_path,
+                        idx        = len(self.data),
+                        concatBool = True,
+                        concatDict = OrderedDict(),
+                    )
+                )
+                self.BATCH.logger.info (space0[1]+"ADDED DataSet: {}".format(repr(str(self.data[-1]))))
+                self.BATCH.logger.info (space0[2]+"BASED on: {}"     .format(repr(str(item0))))
+                ## - iterating over signals for current subject
+                for idx1 in list0[:]:
+                    item1 = self.data[idx1]
+                    if signals0 in item1.data.keys():
+                        self.BATCH.logger.info (space0[3]+"INCLUDING {} from DataSet: {}".format(repr(str(signals0)),item1))
+                        self.data[-1].concatDict[str(item1.locs.of_stem)] = dc(item1.data[signals0])
+
+                concatList = list(self.data[-1].concatDict.values())
+                if concatList:
+                    if isinstance(concatList[0], mne.epochs.BaseEpochs):
+                        self.data[-1].data[signals0] = mne.concatenate_epochs(dc(concatList))
+
+                    elif isinstance(concatList[0], mne.io.brainvision.brainvision.RawBrainVision):
+                        self.data[-1].data[signals0] = mne.concatenate_raws(dc(concatList))
+
+                    else:
+                        raise NotImplementedError
+
+
+
+
+#+END_SRC
+
 
 #+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var EMACS_BUFFER_DIR=(file-name-directory buffer-file-name) :tangle yes
 """
@@ -13,6 +97,14 @@ self.add_actual_reference(
     ref_chans_OLD = self.BATCH.dataBase.setup["chans"]["refs"],
 )
 
+                self.read_raw_data(
+                    raw0    = "raw0",
+                    preload = True,
+                    verbose = None,
+                )
+                self.check_chans_number(
+                    raw0 = "raw0",
+                )
 
 
 
@@ -256,6 +348,60 @@ self.add_actual_reference(
 
 
 
+
+
+
+#+END_SRC
+
+
+
+
+
+#+BEGIN_SRC ipython :session *iPython* :eval yes :results raw drawer :exports both :shebang "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\n" :var EMACS_BUFFER_DIR=(file-name-directory buffer-file-name) :tangle yes
+
+
+                # self.read_raw_fif(
+                #     raw0    = "raw0",
+                #     preload = True,
+                #     verbose = None,
+                # )
+
+
+                """
+
+                event_id = self.BATCH.dataBase.setup["events"]["dictX"]
+                event_di = {val:key for key,val in event_id.items() }
+
+                events0,events_dict0 = mne.events_from_annotations(
+                    self.data["raw0"],
+                    event_id = self.BATCH.dataBase.setup["events"]["dictX"]
+                  )
+
+                annot_from_events = mne.annotations_from_events(
+                    events=events0,
+                    event_desc=event_di,
+                    sfreq=raw.info['sfreq'],
+                    orig_time=raw.info['meas_date'],
+                )
+                raw.set_annotations(annot_from_events)
+
+
+                # ########################
+                # TODO FIXME USE COPY() TO TEST !!!
+                # ########################
+
+
+
+
+                # https://mne.tools/dev/auto_tutorials/intro/plot_20_events_from_raw.html
+                for self.data["raw0"].annotations
+
+                        of_suff = ".".join([of_suff,str(whoami()),key0])
+                        of_suff = "-".join([of_suff,"epo.fif"])
+                        of_name = self.locs.of_base.with_suffix(of_suff)
+                        val0.save(of_name,overwrite=overwrite)
+
+                """
 
 
 
