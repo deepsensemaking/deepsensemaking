@@ -113,8 +113,8 @@ mne.set_log_level("INFO")
 
 
 from autoreject import AutoReject,get_rejection_threshold,set_matplotlib_defaults
-
-
+from autoreject import Ransac
+from autoreject.utils import interpolate_bads  # noqa
 
 
 
@@ -739,7 +739,7 @@ class BatchMNE:
                 showFig = False,
                 saveFig = True,
                 loadHKL = True,
-
+                force   = False,
         ):
             self.BATCH.logger.info(
                 space0[0]+"RUNNING: {}.{}".format(
@@ -748,9 +748,39 @@ class BatchMNE:
             ))
             plt.ioff()
             for idx,item in enumerate(self.data):
-                if not item.locs.of_done.is_file(): # item.locs.of_data.is_file():
+                if force or (not item.locs.of_done.is_file()): # item.locs.of_data.is_file():
                     self.BATCH.logger.info(space0[1]+"PROCESSING: [{}] {}".format(idx,item,))
                     self.data[idx].JOB_003(
+                        ASK     = ASK,
+                        cleanup = cleanup,
+                        showFig = showFig,
+                        saveFig = saveFig,
+                        loadHKL = loadHKL,
+                    )
+
+
+
+
+
+        def JOB_004(
+                self,
+                ASK     = False,
+                cleanup = True,
+                showFig = False,
+                saveFig = True,
+                loadHKL = True,
+                force   = False,
+        ):
+            self.BATCH.logger.info(
+                space0[0]+"RUNNING: {}.{}".format(
+                    ".".join(self.INSP),
+                    str(whoami()),
+            ))
+            plt.ioff()
+            for idx,item in enumerate(self.data):
+                if force or (not item.locs.of_done.is_file()): # item.locs.of_data.is_file():
+                    self.BATCH.logger.info(space0[1]+"PROCESSING: [{}] {}".format(idx,item,))
+                    self.data[idx].JOB_004(
                         ASK     = ASK,
                         cleanup = cleanup,
                         showFig = showFig,
@@ -1285,7 +1315,7 @@ class BatchMNE:
                     chans0     = self.BATCH.dataBase.setup["chans"]["bund1"]["B1"],
                     bunds0     = self.BATCH.dataBase.setup["chans"]["bund0"].items(),
                     timespans0 = list(self.BATCH.dataBase.setup["time"]["spans0"].values()),
-                    stupid     = False,
+                    force      = False,
                 )
 
 
@@ -1383,6 +1413,24 @@ class BatchMNE:
                 )
                 if sys.stdout.isatty(): plt.close("all")
 
+                """
+
+                if sys.stdout.isatty(): plt.close("all")
+                self.plot_channels_power_spectral_density__AND__plot_channels_raw_data_timeseries(
+                    raw0    = "raw0",
+                    total   = True,
+                    average = False,
+                    exclude = False,
+                    showFig = showFig,
+                    saveFig = saveFig,
+                    suffFig = "stg000_very_raw",
+                )
+                if sys.stdout.isatty(): plt.close("all")
+
+                """
+
+
+
                 self.write_hkl()
                 self.mark_DONE()
 
@@ -1410,7 +1458,6 @@ class BatchMNE:
                 - saves datasets for further processing
 
                 """
-
 
                 temp_continue = "\nPress any (standard) key to continue... "
 
@@ -1440,33 +1487,31 @@ class BatchMNE:
                     chans_EXP = self.BATCH.dataBase.setup["chans"]["init"],
                 )
                 self.data["epochs1_descr"] = list()
-                self.data["epochs1_descr"].append("thresholded using epochs0")
+                self.data["epochs1_descr"].append("thresholded using autoreject on epochs0")
+                self.data["epochs1"] = None # PLACEHOLDER
                 self.data["epochs1_trsh0"] = get_rejection_threshold(
                     self.data["epochs0"],
                     decim=1,
                 )
+                """
+                self.data["epochs1_trsh0"]
+
+                """
                 self.data["epochs1"] = self.data["epochs0"].copy().drop_bad(
                     reject = self.data["epochs1_trsh0"],
                 )
 
+                if sys.stdout.isatty(): plt.close("all")
+                self.plot_epochs_drop_log(
+                    epochs0 = "epochs1",
+                    showFig = showFig,
+                    saveFig = saveFig,
+                    suffFig = "stg006_thresholded_epochs",
+                )
+                if sys.stdout.isatty(): plt.close("all")
+
                 self.construct_evoked_WORD_SET(evoked0="evoked1",epochs0="epochs1")
                 self.construct_evoked_WORD_LEN(evoked0="evoked1",epochs0="epochs1")
-
-                """
-                evoked = OrderedDict()
-                evoked["bulk"] = self.data["epochs0"].average()
-                evoked["noun"] = self.data["epochs0"]["noun"].average()
-                evoked["verb"] = self.data["epochs0"]["verb"].average()
-
-                evoked = self.construct_evoked_WORD_SET
-
-
-                self.info(level=0)
-                self.info(level=1)
-                self.info(level=2)
-
-
-                """
 
                 self.extract_PEAKS_from_evoked_to_dataframe(
                     df0_peaks0 = "df1_peaks1",
@@ -1474,15 +1519,156 @@ class BatchMNE:
                     chans0     = self.BATCH.dataBase.setup["chans"]["bund1"]["B1"],
                     bunds0     = self.BATCH.dataBase.setup["chans"]["bund0"].items(),
                     timespans0 = list(self.BATCH.dataBase.setup["time"]["spans0"].values()),
-                    stupid     = False,
+                    force      = False,
                 )
 
-
                 """
+                self.info(0)
+                self.info(1)
+                self.info(2)
+
+                def check_std(
+                        df0,
+                        df1,
+                        quest0 = "word_set",
+                        tmin0  = 0.1,
+                        chan0  = "RP",
+                        mode0  = "pos",
+                ):
+                    df0 = df0.copy()
+                    df1 = df1.copy()
+                    if quest0 is not None:
+                        df0 = df0[ df0.quest0 == quest0 ]
+                        df1 = df1[ df1.quest0 == quest0 ]
+
+                    if tmin0 is not None:
+                        df0 = df0[ df0.tmin0 == tmin0 ]
+                        df1 = df1[ df1.tmin0 == tmin0 ]
+
+                    if chan0 is not None:
+                        df0 = df0[ df0.chan0 == chan0 ]
+                        df1 = df1[ df1.chan0 == chan0 ]
+
+                    if mode0 is not None:
+                        df0 = df0[ df0.mode0 == mode0 ]
+                        df1 = df1[ df1.mode0 == mode0 ]
+
+                    return df0.valX.std(),df1.valX.std()
+
+                df0 = self.data["df0_peaks0"].copy()
+                df1 = self.data["df1_peaks1"].copy()
+
+                print( df1.quest0 .value_counts() )
+                print( df1.tmin0  .value_counts() )
+                print( df1.cond0  .value_counts() )
+                print( df1.mode0  .value_counts() )
+
+                quest0="word_set"
+                tmin0=0.10
+                chan0="RP"
+                mode0="neg"
+                mode0="pos"
+                print( check_std(df0,df1,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
+                tmin0=0.35
+                print( check_std(df0,df1,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
+                tmin0=0.60
+                print( check_std(df0,df1,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
+
                 showFig = True
                 saveFig = False
 
+                self.info(0)
+
                 """
+
+                self.data["epochs2_descr"] = list()
+                self.data["epochs2_descr"].append("autoreject on epochs0 in one step using defaults for consensus and n_interpolate")
+                self.data["epochs2"] = None # PLACEHOLDER
+                mne.utils.check_random_state(42)
+                picks = mne.pick_types(
+                    self.data["epochs0"].info,
+                    meg     = False,
+                    eeg     = True,
+                    eog     = False,
+                    stim    = False,
+                    exclude = "bads",
+                )
+                ar0 = AutoReject(
+                    consensus     = None,
+                    n_interpolate = None,
+                    picks         = picks,
+                    thresh_method = "random_search",
+                    random_state  = 42,
+                    n_jobs        = 6,
+                    verbose       = "tqdm",
+                )
+                ( self.data["epochs2"],
+                  self.data["epochs2_rej0_log0"],
+                ) = ar0.fit_transform(
+                    self.data["epochs0"].copy().load_data(),
+                    return_log=True,
+                )
+                if sys.stdout.isatty(): plt.close("all")
+                self.plot_epochs_drop_log(
+                    epochs0 = "epochs2",
+                    showFig = showFig,
+                    saveFig = saveFig,
+                    suffFig = "stg007_autorejected_epochs",
+                )
+                self.plot_autorejection_log(
+                    epochs0           = "epochs0",
+                    epochs0_rej0_log0 = "epochs2_rej0_log0",
+                    showFig           = showFig,
+                    saveFig           = saveFig,
+                    suffFig           = "stg007_autorejected_epochs",
+                )
+                if sys.stdout.isatty(): plt.close("all")
+
+                self.construct_evoked_WORD_SET(evoked0="evoked2",epochs0="epochs2")
+                self.construct_evoked_WORD_LEN(evoked0="evoked2",epochs0="epochs2")
+
+                self.extract_PEAKS_from_evoked_to_dataframe(
+                    df0_peaks0 = "df2_peaks2",
+                    evoked0    = "evoked2",
+                    chans0     = self.BATCH.dataBase.setup["chans"]["bund1"]["B1"],
+                    bunds0     = self.BATCH.dataBase.setup["chans"]["bund0"].items(),
+                    timespans0 = list(self.BATCH.dataBase.setup["time"]["spans0"].values()),
+                    force      = False,
+                )
+
+                """
+                self.info(0)
+
+                df0 = self.data["df0_peaks0"]
+                df1 = self.data["df1_peaks1"]
+                df2 = self.data["df2_peaks2"]
+
+                quest0="word_set"
+                tmin0=0.10
+                chan0="RP"
+                mode0="neg"
+                mode0="pos"
+                print( check_std(df0,df1,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
+                print( check_std(df0,df2,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
+                print("")
+                tmin0=0.35
+                print( check_std(df0,df1,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
+                print( check_std(df0,df2,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
+                print("")
+                tmin0=0.60
+                print( check_std(df0,df1,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
+                print( check_std(df0,df2,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
+
+                """
+                self.plot_channels_power_spectral_density(
+                    raw0    = "epochs2",
+                    average = False,
+                    exclude = False,
+                    yLimVal = [-80,40],
+                    showFig = showFig,
+                    saveFig = saveFig,
+                    suffFig = "stg001_reref_to_average",
+                )
 
                 chans1 = ["C3","C4","F3","F4","PO3","PO4","O1","O2",]
                 chans2 = ["Fz","Cz","Pz","Oz","CPz","POz","FCz"]
@@ -1490,344 +1676,38 @@ class BatchMNE:
                 chans0 = chans0 + chans2
                 chans0 = chans1
                 chans0 = None
+                bunds0 = OrderedDict()
+                names0 = ["LC","RC",]
+                names0 = ["LF","RF","LC","RC","LP","RP",]
+                for key0 in names0:
+                    bunds0[key0] = self.BATCH.dataBase.setup["chans"]["bund0"][key0]
+
                 bunds0 = self.BATCH.dataBase.setup["chans"]["bund0"]
-
                 if sys.stdout.isatty(): plt.close("all")
                 self.plot_evoked_COMPARE(
-                    evoked0     = "evoked0",  # "evoked0" OR "evoked2" OR ...
+                    evoked0     = "evoked2",  # "evoked0"  OR "evoked2" OR ...
                     quest0      = "word_set", # "word_set" OR "word_len"
                     chans0      = chans0,
                     bunds0      = bunds0,
                     showFig     = showFig,
                     saveFig     = saveFig,
-                    suffFig     = "",
+                    suffFig     = "autorejected", # "thresholded",
                     colors0     = self.BATCH.dataBase.setup["colors0"]["word_set"],
                     styles0     = self.BATCH.dataBase.setup["styles0"]["word_set"],
                     linestyles0 = self.BATCH.dataBase.setup["linestyles0"]["word_set"],
                     vlines7     = self.BATCH.dataBase.setup["time"]["vlines7"],
                     timespans0  = list(self.BATCH.dataBase.setup["time"]["spans0"].values()),
                     colors6     = self.BATCH.dataBase.setup["time"]["colors6"],
-                    df0_peaks0  = "df0_peaks0",
-                )
-                self.plot_evoked_COMPARE(
-                    evoked0     = "evoked1",  # "evoked0" OR "evoked2" OR ...
-                    quest0      = "word_set", # "word_set" OR "word_len"
-                    chans0      = chans0,
-                    bunds0      = bunds0,
-                    showFig     = showFig,
-                    saveFig     = saveFig,
-                    suffFig     = "",
-                    colors0     = self.BATCH.dataBase.setup["colors0"]["word_set"],
-                    styles0     = self.BATCH.dataBase.setup["styles0"]["word_set"],
-                    linestyles0 = self.BATCH.dataBase.setup["linestyles0"]["word_set"],
-                    vlines7     = self.BATCH.dataBase.setup["time"]["vlines7"],
-                    timespans0  = list(self.BATCH.dataBase.setup["time"]["spans0"].values()),
-                    colors6     = self.BATCH.dataBase.setup["time"]["colors6"],
-                    df0_peaks0  = "df1_peaks1",
+                    df0_peaks0  = "df2_peaks2",
                 )
                 if sys.stdout.isatty(): plt.close("all")
-
-
-
 
                 """
-                epochs_dirty = self.data["epochs0"]       .copy()
-                epochs_thrsh = self.data["epochs1_thrsh0"].copy()
+                ## Code below for epochs3 provides results that are essentially identical to epochs2
+                ## Thus epochs3 is ommited
 
-
-                evoked = OrderedDict()
-                evoked["bulk"] = self.data["epochs0"].average()
-                evoked["noun"] = self.data["epochs0"]["noun"].average()
-                evoked["verb"] = self.data["epochs0"]["verb"].average()
-
-                evoked = self.construct_evoked_WORD_SET
-
-
-                """
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            def JOB_402(
-                    self,
-                    ASK     = False,
-                    cleanup = False,
-                    showFig = False,
-                    saveFig = True,
-            ):
-                """
-                  - BAD channels interpolated [???]
-
-                """
-
-
-                if sys.stdout.isatty(): plt.close("all")
-                self.plot_epochs_using_chan_BUNDLES_carpet(
-                    epochs0 = "epochs0",
-                    showFig = showFig,
-                    saveFig = saveFig,
-                    suffFig = "stg005_before_autorej",
-                )
-                if sys.stdout.isatty(): plt.close("all")
-
-
-                if sys.stdout.isatty(): plt.close("all")
-                self.plot_epochs_drop_log(
-                    epochs0 = "epochs1",
-                    showFig = showFig,
-                    saveFig = saveFig,
-                    suffFig = "stg006_thresholded_epochs",
-                )
-                if sys.stdout.isatty(): plt.close("all")
-                self.plot_epochs_using_chan_BUNDLES_carpet(
-                    epochs0 = "epochs1",
-                    showFig = showFig,
-                    saveFig = saveFig,
-                    suffFig = "stg006_thresholded_epochs",
-                )
-                if sys.stdout.isatty(): plt.close("all")
-                mne.utils.check_random_state(42)
-                picks = mne.pick_types(
-                    self.data["epochs0"].info,
-                    meg     = False,
-                    eeg     = True,
-                    eog     = False,
-                    stim    = False,
-                    exclude = "bads",
-                )
-                ar0 = AutoReject(
-                    consensus     = None,
-                    n_interpolate = None,
-                    picks         = picks,
-                    thresh_method = "random_search",
-                    random_state  = 42,
-                    n_jobs        = 6,
-                    verbose       = "tqdm",
-                )
-                ( self.data["epochs2"],
-                  self.data["epochs2_rej0_log0"],
-                ) = ar0.fit_transform(
-                    self.data["epochs0"].copy().load_data(),
-                    return_log=True,
-                )
-                if sys.stdout.isatty(): plt.close("all")
-                self.plot_epochs_drop_log(
-                    epochs0 = "epochs2",
-                    showFig = showFig,
-                    saveFig = saveFig,
-                    suffFig = "stg007_autorejected_epochs",
-
-                )
-                if sys.stdout.isatty(): plt.close("all")
-                self.plot_autorejection_log(
-                    epochs0           = "epochs0",
-                    epochs0_rej0_log0 = "epochs2_rej0_log0",
-                    showFig           = showFig,
-                    saveFig           = saveFig,
-                    suffFig           = "stg007_autorejected_epochs",
-                )
-                if sys.stdout.isatty(): plt.close("all")
-                self.plot_epochs_using_chan_BUNDLES_carpet(
-                    epochs0 = "epochs2",
-                    showFig = showFig,
-                    saveFig = saveFig,
-                    suffFig = "stg007_autorejected_epochs",
-                )
-                if sys.stdout.isatty(): plt.close("all")
-
-
-
-
-
-
-
-
-
-                self.evoked_to_dataframe(
-                    evoked0      = "evoked0",
-                    quest0       = "word_set",
-                    df0_evoked0  = "df0_evoked0_word_set",
-                )
-                ###############  self.epochs_to_dataframe(
-                ###############      epochs0     = "epochs2",
-                ###############      events0     = "events0",
-                ###############      meta1       = 'meta1',
-                ###############      df0_epochs0 = "df0_epochs2",
-                ###############  )
-
-                """
-                ## MANUAL INSPECTION of EPOCHS
-
-                self.inspect_epochs(
-                    epochs0    = "epochs0",
-                    excludeBAD = False,
-                )
-                self.export_BAD_epochs_info(
-                    epochs0 = "epochs0",
-                )
-                """
-
-
-                self.write_hkl()
-                self.mark_DONE()
-
-                # if cleanup:
-                #     self.data = OrderedDict()
-
-
-
-
-
-
-
-
-            def JOB_501(
-                    self,
-                    ASK     = False,
-                    cleanup = False,
-                    showFig = False,
-                    saveFig = True,
-            ):
-                """
-                This JOB
-                - reads raw data
-                - applies very basic pre-processing steps (filtering ETC)
-                - produces basic plots that should be used for data QC
-                - SHOULD end up with
-                  - filtered data
-                  - BAD channels interpolated [???]
-
-                """
-
-                if sys.stdout.isatty(): plt.close("all")
-                self.plot_channels_power_spectral_density__AND__plot_channels_raw_data_timeseries(
-                    raw0    = "raw0",
-                    total   = True,
-                    average = False,
-                    exclude = False,
-                    showFig = showFig,
-                    saveFig = saveFig,
-                    suffFig = "stg000_very_raw",
-                )
-                if sys.stdout.isatty(): plt.close("all")
-                self.average_reference_projection(
-                    raw0          = "raw0",
-                    ref_chans_NEW = "average",
-                    projection    = True,
-                    ch_type       = "eeg",
-                )
-                if sys.stdout.isatty(): plt.close("all")
-                self.plot_channels_power_spectral_density__AND__plot_channels_raw_data_timeseries(
-                    raw0    = "raw0",
-                    total   = True,
-                    average = False,
-                    exclude = False,
-                    showFig = showFig,
-                    saveFig = saveFig,
-                    suffFig = "stg001_reref_to_average",
-                )
-                if sys.stdout.isatty(): plt.close("all")
-
-
-                if sys.stdout.isatty(): plt.close("all")
-                self.plot_channels_power_spectral_density__AND__plot_channels_raw_data_timeseries(
-                    raw0    = "raw0",
-                    total   = True,
-                    average = False,
-                    exclude = False,
-                    showFig = showFig,
-                    saveFig = saveFig,
-                    suffFig = "stg002_{}_from_{}_to_{}".format(fir_design,l_freq,h_freq),
-                )
-                if sys.stdout.isatty(): plt.close("all")
-
-
-
-                if sys.stdout.isatty(): plt.close("all")
-                self.plot_epochs_drop_log(
-                    epochs0 = "epochs1",
-                    showFig = showFig,
-                    saveFig = saveFig,
-                    suffFig = "stg006_thresholded_epochs",
-                )
-                if sys.stdout.isatty(): plt.close("all")
-                self.plot_epochs_using_chan_BUNDLES_carpet(
-                    epochs0 = "epochs1",
-                    showFig = showFig,
-                    saveFig = saveFig,
-                    suffFig = "stg006_thresholded_epochs",
-                )
-                if sys.stdout.isatty(): plt.close("all")
-                mne.utils.check_random_state(42)
-                picks = mne.pick_types(
-                    self.data["epochs0"].info,
-                    meg     = False,
-                    eeg     = True,
-                    eog     = False,
-                    stim    = False,
-                    exclude = "bads",
-                )
-                ar0 = AutoReject(
-                    consensus     = None,
-                    n_interpolate = None,
-                    picks         = picks,
-                    thresh_method = "random_search",
-                    random_state  = 42,
-                    n_jobs        = 6,
-                    verbose       = "tqdm",
-                )
-                ( self.data["epochs2"],
-                  self.data["epochs2_rej0_log0"],
-                ) = ar0.fit_transform(
-                    self.data["epochs0"].copy().load_data(),
-                    return_log=True,
-                )
-                if sys.stdout.isatty(): plt.close("all")
-                self.plot_epochs_drop_log(
-                    epochs0 = "epochs2",
-                    showFig = showFig,
-                    saveFig = saveFig,
-                    suffFig = "stg007_autorejected_epochs",
-
-                )
-                if sys.stdout.isatty(): plt.close("all")
-                self.plot_autorejection_log(
-                    epochs0           = "epochs0",
-                    epochs0_rej0_log0 = "epochs2_rej0_log0",
-                    showFig           = showFig,
-                    saveFig           = saveFig,
-                    suffFig           = "stg007_autorejected_epochs",
-                )
-                if sys.stdout.isatty(): plt.close("all")
-                self.plot_epochs_using_chan_BUNDLES_carpet(
-                    epochs0 = "epochs2",
-                    showFig = showFig,
-                    saveFig = saveFig,
-                    suffFig = "stg007_autorejected_epochs",
-                )
-                if sys.stdout.isatty(): plt.close("all")
-                """
-                [item for item in self.data["epochs0"].drop_log if len(item) != 0]
-                [item for item in self.data["epochs1"].drop_log if len(item) != 0]
-                [item for item in self.data["epochs2"].drop_log if len(item) != 0]
-                [item for item in self.data["epochs3"].drop_log if len(item) != 0]
-
-
-                """
+                self.data["epochs3_descr"] = list()
+                self.data["epochs3_descr"].append("autoreject on epochs0 in two steps using non default values for consensus and n_interpolate")
                 self.data["epochs3"] = self.data["epochs0"].copy().load_data()
                 picks = mne.pick_types(
                     self.data["epochs3"].info,
@@ -1837,14 +1717,17 @@ class BatchMNE:
                     stim    = False,
                     exclude = "bads",
                 )
-                n_interpolates  = np.array([1, 4, 32])
+                mne.utils.check_random_state(42)
                 consensus_percs = np.linspace(0, 1.0, 11)
+                n_interpolates  = np.array([1,4,8,16,32])
                 ar1 = AutoReject(
-                    n_interpolates,
-                    consensus_percs,
-                    picks=picks,
-                    thresh_method='random_search',
-                    random_state=42,
+                    consensus     = consensus_percs,
+                    n_interpolate = n_interpolates,
+                    picks         = picks,
+                    thresh_method = "random_search",
+                    random_state  = 42,
+                    n_jobs        = 6,
+                    verbose       = "tqdm",
                 )
                 ar1.fit(self.data["epochs3"])
                 ( self.data["epochs3"],
@@ -1860,7 +1743,6 @@ class BatchMNE:
                     saveFig = saveFig,
                     suffFig = "stg008_autorejected_epochs",
                 )
-                if sys.stdout.isatty(): plt.close("all")
                 self.plot_autorejection_log(
                     epochs0           = "epochs0",
                     epochs0_rej0_log0 = "epochs3_rej0_log0",
@@ -1869,88 +1751,245 @@ class BatchMNE:
                     suffFig           = "stg008_autorejected_epochs",
                 )
                 if sys.stdout.isatty(): plt.close("all")
-                self.plot_epochs_using_chan_BUNDLES_carpet(
-                    epochs0 = "epochs3",
-                    showFig = showFig,
-                    saveFig = saveFig,
-                    suffFig = "stg008_autorejected_epochs",
+
+                self.construct_evoked_WORD_SET(evoked0="evoked3",epochs0="epochs3")
+                self.construct_evoked_WORD_LEN(evoked0="evoked3",epochs0="epochs3")
+
+                self.extract_PEAKS_from_evoked_to_dataframe(
+                    df0_peaks0 = "df3_peaks3",
+                    evoked0    = "evoked3",
+                    chans0     = self.BATCH.dataBase.setup["chans"]["bund1"]["B1"],
+                    bunds0     = self.BATCH.dataBase.setup["chans"]["bund0"].items(),
+                    timespans0 = list(self.BATCH.dataBase.setup["time"]["spans0"].values()),
+                    force      = False,
                 )
-                if sys.stdout.isatty(): plt.close("all")
+
+                """
+
+                """
+
+                self.info(0)
+
+                df0 = self.data["df0_peaks0"]
+                df1 = self.data["df1_peaks1"]
+                df2 = self.data["df2_peaks2"]
+                df3 = self.data["df3_peaks3"]
+
+                quest0="word_set"
+                tmin0=0.10
+                chan0="RP"
+                mode0="neg"
+                mode0="pos"
+                print( check_std(df0,df1,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
+                print( check_std(df0,df2,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
+                print( check_std(df0,df3,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
+                print("")
+                tmin0=0.35
+                print( check_std(df0,df1,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
+                print( check_std(df0,df2,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
+                print( check_std(df0,df3,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
+                print("")
+                tmin0=0.60
+                print( check_std(df0,df1,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
+                print( check_std(df0,df2,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
+                print( check_std(df0,df3,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
+
+                """
+
+                """
+                ## MANUAL INSPECTION of EPOCHS
+
+                self.inspect_epochs(
+                    epochs0    = "epochs2",
+                    excludeBAD = False,
+                )
+                self.export_BAD_epochs_info(
+                    epochs0 = "epochs2",
+                )
+
+                """
+
+
+                """
+                self.info(0)
+
+                epochs_dirty = self.data["epochs0"].copy()
+                epochs_clean = self.data["epochs2"].copy()
+
+                evoked_dirty = OrderedDict()
+                evoked_dirty["bulk"] = epochs_dirty.average()
+                evoked_dirty["noun"] = epochs_dirty["noun"].average()
+                evoked_dirty["verb"] = epochs_dirty["verb"].average()
+
+                evoked_clean = OrderedDict()
+                evoked_clean["bulk"] = epochs_clean.average()
+                evoked_clean["noun"] = epochs_clean["noun"].average()
+                evoked_clean["verb"] = epochs_clean["verb"].average()
+
+
+                ar.get_reject_log(epochs_dirty).plot()
+
+                """
+
+                temp = OrderedDict()
+                temp["ica0"] = "epochs0"
+                temp["ica1"] = "epochs1"
+                temp["ica2"] = "epochs2"
+
+                for key0,val0 in temp.items():
+                    self.data[key0+"_descr"] = list()
+                    self.data[key0+"_descr"].append("ICA infomax on "+val0)
+                    self.run_ica(
+                        ica0         = key0,
+                        epochs0      = val0,
+                        n_components = 0.98,
+                    )
+                    self.data[key0].detect_artifacts(
+                        self.data[val0],
+                        eog_ch         = None,
+                        eog_criterion  = 0.4,
+                        ecg_ch         = None,
+                        ecg_criterion  = None,
+                        skew_criterion = 2,
+                        kurt_criterion = 2,
+                        var_criterion  = 2,
+                    )
+
+                    if sys.stdout.isatty(): plt.close("all")
+                    self.inspect_components(
+                        ica0    = key0,
+                        epochs0 = val0,
+                        showFig = showFig,
+                        saveFig = saveFig,
+                    )
+                    self.plot_component_properties(
+                        ica0     = key0,
+                        epochs0  = val0,
+                        rejected = True,
+                        showFig  = showFig,
+                        saveFig  = saveFig,
+                    )
+                    if sys.stdout.isatty(): plt.close("all")
+
+
+                """
+
+                self.info(0)
+                key0="ica0";val0="epochs0";
+                key0="ica1";val0="epochs1";
+                key0="ica2";val0="epochs2";
+
+                ica = self.data[key0]
+                ica.exclude
+
+                showFig  = False
+                saveFig  = True
+
+                showFig  = True
+                saveFig  = False
+
+                """
+
+                self.write_hkl()
+                self.mark_DONE()
+
+                if cleanup:
+                    self.data = OrderedDict()
 
 
 
 
 
+            def JOB_004(
+                    self,
+                    ASK     = False,
+                    cleanup = False,
+                    showFig = False,
+                    saveFig = True,
+                    loadHKL = True,
+            ):
+                """
+                This JOB
+                - ...
+
+                """
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            def JOB_702(self,ASK=True):
-                pass
-
-                ### TODO FIXME ALSO PRODUCE STATS HERE FOR COMPARISON WITH CLEANED DATA
-
-
-
-            def JOB_303(self,ASK=True):
                 temp_continue = "\nPress any (standard) key to continue... "
-
 
                 self.info()
                 if ASK & sys.stdout.isatty(): input(temp_continue)
 
+                """
+                showFig = True
+                saveFig = False
 
-                self.run_ica(
-                    ica0         = "ica0",
-                    epochs0      = "epochs0",
-                    n_components = 0.98,
+                loadHKL = True
+
+                data.setup.read()
+                data.setup.info()
+
+                self.info(0)
+
+                """
+
+                TIME_T0 = time.time()
+
+                if loadHKL:
+                    self.read_hkl()
+
+                """
+
+                self.info(0)
+
+                key0="ica0";val0="epochs0";
+                key0="ica1";val0="epochs1";
+                key0="ica2";val0="epochs2";
+
+                ica = self.data[key0]
+                ica.exclude
+
+                showFig  = False
+                saveFig  = True
+
+                showFig  = True
+                saveFig  = False
+
+                """
+
+                self.data["ica2_excl0"] = self.data["ica2"].exclude
+                self.export_components(
+                    ica0_excl0 = "ica2_excl0",
+                    suffFig    = "auto",
+                    overwrite  = False,
+                )
+                self.export_components(
+                    ica0_excl0 = "ica2_excl0",
+                    suffFig    = "user",
+                    overwrite  = False,
+                )
+                self.data["ica2_excl1"] = self.import_components(
+                    ica0_excl0 = "ica2_excl0",
+                    suffFig    = "user",
                 )
 
 
-                if sys.stdout.isatty(): plt.close("all")
-                self.inspect_components()
-                ### if ASK & sys.stdout.isatty(): input(temp_continue)
-                ### self.export_components(of_suff=".0.test")
-                ### self.import_components(of_suff=".0.test")
-                if sys.stdout.isatty(): plt.close("all")
+                self.data["ica2"].exclude = self.data["ica2_excl1"]
+
+                """
+
+                self.data["ica2"].exclude
+                self.data["epochs2"].info["projs"]
+
+                """
+
+                self.data["epochs3_descr"] = list()
+                self.data["epochs3_descr"].append("epochs2 with ica2 applied")
 
 
-
-
-
-                if sys.stdout.isatty(): plt.close("all")
-                # if ASK & sys.stdout.isatty(): input(temp_continue)
-                if sys.stdout.isatty(): plt.close("all")
-
-
-
-
-
-
-
-
-
-
-
-
-
-                if sys.stdout.isatty(): plt.close("all")
-                self.plot_component_properties()
-                if sys.stdout.isatty(): plt.close("all")
-
+                """
+                ## TODO IN JOB_004
+                ## OR simply use ICA.apply()
 
                 self.apply_projections_and_interpolate_bads(
                     ica0="ica0",
@@ -1959,30 +1998,431 @@ class BatchMNE:
                     epochs2="epochs2",
                 )
 
+                """
+
+                self.data["epochs3"] = self.data["ica2"].apply(
+                    self.data["epochs2"].copy(),
+                )
 
 
+                self.construct_evoked_WORD_SET(evoked0="evoked3",epochs0="epochs3")
+                self.construct_evoked_WORD_LEN(evoked0="evoked3",epochs0="epochs3")
 
-                self.construct_evoked_WORD_SET(evoked0="evoked2",epochs0="epochs2")
-                self.construct_evoked_WORD_LEN(evoked0="evoked2",epochs0="epochs2")
+
+                self.extract_PEAKS_from_evoked_to_dataframe(
+                    df0_peaks0 = "df3_peaks3",
+                    evoked0    = "evoked3",
+                    chans0     = self.BATCH.dataBase.setup["chans"]["bund1"]["B1"],
+                    bunds0     = self.BATCH.dataBase.setup["chans"]["bund0"].items(),
+                    timespans0 = list(self.BATCH.dataBase.setup["time"]["spans0"].values()),
+                    force      = False,
+                )
+
+
+                self.extract_PEAKS_from_evoked_to_dataframe(
+                    df0_peaks0 = "df3_peaks3_force",
+                    evoked0    = "evoked3",
+                    chans0     = self.BATCH.dataBase.setup["chans"]["bund1"]["B1"],
+                    bunds0     = self.BATCH.dataBase.setup["chans"]["bund0"].items(),
+                    timespans0 = list(self.BATCH.dataBase.setup["time"]["spans0"].values()),
+                    force      = False,
+                )
+
+                """
+
+                self.info(0)
+
+                df0 = self.data["df0_peaks0"]
+                df1 = self.data["df1_peaks1"]
+                df2 = self.data["df2_peaks2"]
+                df3 = self.data["df3_peaks3"]
+
+                quest0="word_set"
+                tmin0=0.10
+                chan0="RP"
+                mode0="neg"
+                mode0="pos"
+                print( check_std(df0,df1,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
+                print( check_std(df0,df2,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
+                print( check_std(df0,df3,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
+                print("")
+                tmin0=0.35
+                print( check_std(df0,df1,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
+                print( check_std(df0,df2,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
+                print( check_std(df0,df3,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
+                print("")
+                tmin0=0.60
+                print( check_std(df0,df1,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
+                print( check_std(df0,df2,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
+                print( check_std(df0,df3,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
+
+                """
+
+
+                """
+                self.info(0)
+
+                epochs_dirty = self.data["epochs2"].copy()
+                epochs_clean = self.data["epochs3"].copy()
+
+                evoked_dirty = OrderedDict()
+                evoked_dirty["bulk"] = epochs_dirty.average()
+                evoked_dirty["noun"] = epochs_dirty["noun"].average()
+                evoked_dirty["verb"] = epochs_dirty["verb"].average()
+
+                evoked_clean = OrderedDict()
+                evoked_clean["bulk"] = epochs_clean.average()
+                evoked_clean["noun"] = epochs_clean["noun"].average()
+                evoked_clean["verb"] = epochs_clean["verb"].average()
+
+                """
+
+                self.evoked_to_dataframe(
+                    evoked0      = "evoked3",
+                    quest0       = "word_set",
+                    df0_evoked0  = "df0_evoked3_word_set",
+                )
+
+                df_name = "df0_evoked3_word_set"
+                of_suff = ""
+                of_suff = ".".join([of_suff,df_name])
+                of_suff = ".".join([of_suff,"csv"])
+                of_name = self.locs.of_base.with_suffix(of_suff)
+                self.data[df_name].to_csv(
+                    of_name,
+                    index = False,
+                )
+
+
+                df_name = "df3_peaks3"
+                of_suff = ""
+                of_suff = ".".join([of_suff,df_name])
+                of_suff = ".".join([of_suff,"csv"])
+                of_name = self.locs.of_base.with_suffix(of_suff)
+                self.data[df_name].to_csv(
+                    of_name,
+                    index = False,
+                )
+
+                has_RAM = False
+                if has_RAM:
+                    self.epochs_to_dataframe(
+                        epochs0     = "epochs3",
+                        events0     = "events0",
+                        meta1       = 'meta1',
+                        df0_epochs0 = "df0_epochs3",
+                    )
+
+                if sys.stdout.isatty(): plt.close("all")
+                self.plot_channels_power_spectral_density(
+                    raw0    = "epochs3",
+                    average = False,
+                    exclude = False,
+                    yLimVal = [-80,40],
+                    showFig = showFig,
+                    saveFig = saveFig,
+                    suffFig = "",
+                )
+                if sys.stdout.isatty(): plt.close("all")
+
+                chans0 = None
+                bunds0 = self.BATCH.dataBase.setup["chans"]["bund0"]
+                if sys.stdout.isatty(): plt.close("all")
+                self.plot_evoked_COMPARE(
+                    evoked0     = "evoked3",  # "evoked0"  OR "evoked2" OR ...
+                    quest0      = "word_set", # "word_set" OR "word_len"
+                    chans0      = chans0,
+                    bunds0      = bunds0,
+                    showFig     = showFig,
+                    saveFig     = saveFig,
+                    suffFig     = "postICA", # "thresholded",
+                    colors0     = self.BATCH.dataBase.setup["colors0"]["word_set"],
+                    styles0     = self.BATCH.dataBase.setup["styles0"]["word_set"],
+                    linestyles0 = self.BATCH.dataBase.setup["linestyles0"]["word_set"],
+                    vlines7     = self.BATCH.dataBase.setup["time"]["vlines7"],
+                    timespans0  = list(self.BATCH.dataBase.setup["time"]["spans0"].values()),
+                    colors6     = self.BATCH.dataBase.setup["time"]["colors6"],
+                    df0_peaks0  = "df3_peaks3",
+                )
+                if sys.stdout.isatty(): plt.close("all")
 
 
                 if sys.stdout.isatty(): plt.close("all")
-                self.plot_evoked_JOINT(evoked0="evoked2",quest0="word_set",)
-                self.plot_evoked_JOINT(evoked0="evoked2",quest0="word_len",)
+                self.plot_evoked_COMPARE(
+                    evoked0     = "evoked3",  # "evoked0"  OR "evoked2" OR ...
+                    quest0      = "word_len", # "word_len" OR "word_len"
+                    chans0      = chans0,
+                    bunds0      = bunds0,
+                    showFig     = showFig,
+                    saveFig     = saveFig,
+                    suffFig     = "postICA", # "thresholded",
+                    colors0     = self.BATCH.dataBase.setup["colors0"]["word_len"],
+                    styles0     = self.BATCH.dataBase.setup["styles0"]["word_len"],
+                    linestyles0 = self.BATCH.dataBase.setup["linestyles0"]["word_len"],
+                    vlines7     = self.BATCH.dataBase.setup["time"]["vlines7"],
+                    timespans0  = list(self.BATCH.dataBase.setup["time"]["spans0"].values()),
+                    colors6     = self.BATCH.dataBase.setup["time"]["colors6"],
+                    df0_peaks0  = "df3_peaks3",
+                )
                 if sys.stdout.isatty(): plt.close("all")
 
-                if sys.stdout.isatty(): plt.close("all")
-                chans0 = ["C3","C4","F3","F4","PO3","PO4",]
-                chans0 = ["C3","C4","F3","F4","PO3","PO4","O1","O2",]
 
-                self.plot_evoked_COMPARE(evoked0="evoked2",chans0=chans0,quest0="word_set",)
-                self.plot_evoked_COMPARE(evoked0="evoked2",chans0=chans0,quest0="word_len",)
+                self.plot_epochs_drop_log(
+                    epochs0 = "epochs1",
+                    showFig = showFig,
+                    saveFig = saveFig,
+                    suffFig = "",
+                )
+                self.plot_epochs_drop_log(
+                    epochs0 = "epochs2",
+                    showFig = showFig,
+                    saveFig = saveFig,
+                    suffFig = "",
+                )
+                self.plot_epochs_drop_log(
+                    epochs0 = "epochs3",
+                    showFig = showFig,
+                    saveFig = saveFig,
+                    suffFig = "",
+                )
+                self.plot_autorejection_log(
+                    epochs0           = "epochs0",
+                    epochs0_rej0_log0 = "epochs2_rej0_log0",
+                    showFig           = showFig,
+                    saveFig           = saveFig,
+                    suffFig           = "",
+                )
+
+                bundles  = dc(self.BATCH.dataBase.setup["chans"]["bund0"])
+                combines = ["mean",]
+                self.plot_epochs_using_chan_BUNDLES_carpet(
+                    epochs0  = "epochs3",
+                    bundles  = bundles,
+                    combines = combines,
+                    showFig  = showFig,
+                    saveFig  = saveFig,
+                    suffFig  = "",
+                )
+
+                self.plot_evoked_JOINT(
+                    evoked0           = "evoked3",
+                    quest0            = "word_set",
+                    apply_projections = True,
+                    interpolate_bads  = True,
+                    showFig           = showFig,
+                    saveFig           = saveFig,
+                    suffFig           = "",
+                )
+
+                self.plot_evoked_JOINT(
+                    evoked0           = "evoked3",
+                    quest0            = "word_len", # "word_len" OR "word_len"
+                    apply_projections = True,
+                    interpolate_bads  = True,
+                    showFig           = showFig,
+                    saveFig           = saveFig,
+                    suffFig           = "",
+                )
+
                 if sys.stdout.isatty(): plt.close("all")
 
-                ### self.export_evoked_as_dataframe(evoked0="evoked2",quest0="word_set",df0_name="dfEvoked2",)
-                ### self.export_epochs_as_dataframe(epochs0="epochs2",events0="events0",df0_name="dfEpochs2",)
+                """
+                [item for item in self.data["epochs0"].drop_log if len(item) != 0]
+                [item for item in self.data["epochs1"].drop_log if len(item) != 0]
+                [item for item in self.data["epochs2"].drop_log if len(item) != 0]
+                [item for item in self.data["epochs3"].drop_log if len(item) != 0]
+
+
+                """
+
 
                 self.write_hkl()
+                self.mark_DONE()
+
+                if cleanup:
+                    self.data = OrderedDict()
+
+
+                TIME_T1 = time.time()
+                TIME_D1 = TIME_T1-TIME_T0
+
+                self.BATCH.logger.info (space0[1]+("="*77))
+                self.BATCH.logger.info (space0[1]+("="*77))
+                self.BATCH.logger.info (space0[1]+"TIME ELAPSED: {}".format( hf.format_timespan( TIME_D1 )) )
+                self.BATCH.logger.info (space0[1]+("="*77))
+                self.BATCH.logger.info (space0[1]+("="*77))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            def JOB_005(
+                    self,
+                    ASK     = False,
+                    cleanup = False,
+                    showFig = False,
+                    saveFig = True,
+                    loadHKL = True,
+            ):
+                """
+                This JOB
+                - ...
+
+                """
+
+                temp_continue = "\nPress any (standard) key to continue... "
+
+                self.info()
+                if ASK & sys.stdout.isatty(): input(temp_continue)
+
+                """
+                showFig = True
+                saveFig = False
+
+                loadHKL = True
+
+                data.setup.read()
+                data.setup.info()
+
+                self.info(0)
+
+                """
+
+                if loadHKL:
+                    self.read_hkl()
+
+
+
+
+
+
+
+            def JOB_006(
+                    self,
+                    ASK     = False,
+                    cleanup = False,
+                    showFig = False,
+                    saveFig = True,
+                    loadHKL = True,
+            ):
+                """
+                This JOB
+                - ...
+
+                """
+
+                temp_continue = "\nPress any (standard) key to continue... "
+
+                self.info()
+                if ASK & sys.stdout.isatty(): input(temp_continue)
+
+                """
+                showFig = True
+                saveFig = False
+
+                loadHKL = True
+
+                data.setup.read()
+                data.setup.info()
+
+                self.info(0)
+
+                """
+
+                if loadHKL:
+                    self.read_hkl()
+
+                """
+                ## RANSAC should be run within JOB_003 OR JOB_006 !!!
+
+                """
+
+                mne.utils.check_random_state(42)
+                picks = mne.pick_types(
+                    self.data["epochs2"].info,
+                    meg     = False,
+                    eeg     = True,
+                    eog     = False,
+                    stim    = False,
+                    exclude = "bads",
+                )
+                ransac0 = Ransac(
+                    picks        = picks,
+                    n_jobs       = 6,
+                    random_state = 42,
+                    verbose      = "tqdm",
+                )
+                self.data["epochs4"] = ransac0.fit_transform(self.data["epochs3"])
+
+                self.construct_evoked_WORD_SET(evoked0="evoked4",epochs0="epochs4")
+                self.construct_evoked_WORD_LEN(evoked0="evoked4",epochs0="epochs4")
+
+
+                self.extract_PEAKS_from_evoked_to_dataframe(
+                    df0_peaks0 = "df4_peaks4",
+                    evoked0    = "evoked4",
+                    chans0     = self.BATCH.dataBase.setup["chans"]["bund1"]["B1"],
+                    bunds0     = self.BATCH.dataBase.setup["chans"]["bund0"].items(),
+                    timespans0 = list(self.BATCH.dataBase.setup["time"]["spans0"].values()),
+                    force      = False,
+                )
+
+
+                self.extract_PEAKS_from_evoked_to_dataframe(
+                    df0_peaks0 = "df4_peaks4_forced",
+                    evoked0    = "evoked4",
+                    chans0     = self.BATCH.dataBase.setup["chans"]["bund1"]["B1"],
+                    bunds0     = self.BATCH.dataBase.setup["chans"]["bund0"].items(),
+                    timespans0 = list(self.BATCH.dataBase.setup["time"]["spans0"].values()),
+                    force      = False,
+                )
+
+
+                """
+
+                df0 = self.data["df0_peaks0"]
+                df1 = self.data["df1_peaks1"]
+                df2 = self.data["df2_peaks2"]
+                df3 = self.data["df3_peaks3"]
+
+                quest0="word_set"
+                tmin0=0.10
+                chan0="RP"
+                mode0="neg"
+                mode0="pos"
+                print( check_std(df0,df1,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
+                print( check_std(df0,df2,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
+                print( check_std(df0,df3,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
+                print("")
+                tmin0=0.35
+                print( check_std(df0,df1,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
+                print( check_std(df0,df2,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
+                print( check_std(df0,df3,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
+                print("")
+                tmin0=0.60
+                print( check_std(df0,df1,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
+                print( check_std(df0,df2,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
+                print( check_std(df0,df3,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
+
+                """
+
+
+
+
+
+
+
 
 
             ## =============================================================================
@@ -2527,10 +2967,6 @@ class BatchMNE:
 
             """
 
-
-
-
-
             def extract_metadata_for_events_acquired(
                     self,
                     events0, # events0 = "events0",
@@ -2993,7 +3429,7 @@ class BatchMNE:
                     chans0,         # chans0     = self.BATCH.dataBase.setup["chans"]["bund1"]["B1"],
                     bunds0,         # bunds0     = self.BATCH.dataBase.setup["chans"]["bund0"].items(),
                     timespans0,     # timespans0 = list(self.BATCH.dataBase.setup["time"]["spans0"].values()),
-                    stupid = False, # stupid     = False,
+                    force = False, # force     = False,
             ):
                 self.BATCH.logger.info(
                     space0[0]+"RUNNING: {}.{}".format(
@@ -3017,7 +3453,7 @@ class BatchMNE:
                     for idx0,(cond0,val0) in enumerate(self.data[evoked0][quest0].items()):
                         self.BATCH.logger.info (space0[2]+"cond0: {}".format(repr(str( cond0 ))))
                         for chan0 in chans0:
-                            self.BATCH.logger.info (space0[2]+"chan0: {}".format(repr(str( chan0 ))))
+                            self.BATCH.logger.debug(space0[2]+"chan0: {}".format(repr(str( chan0 ))))
                             for timespan0 in timespans0:
                                 tmin0 = timespan0[0]
                                 tmax0 = timespan0[1]
@@ -3042,7 +3478,7 @@ class BatchMNE:
                                     latX  = latX[0] if latX.size > 0 else np.nan
                                     valX  = valX[0] if valX.size > 0 else np.nan
                                     if mode0 == "neg": valX = -valX
-                                    if stupid:
+                                    if force:
                                         chanX,latX,valX = val0.copy().pick(chan0).get_peak(
                                             ch_type          = "eeg",
                                             tmin             = tmin0,
@@ -3079,7 +3515,7 @@ class BatchMNE:
                             method = "mean",
                         )
                         for chan0 in inst1.info["ch_names"]:
-                            self.BATCH.logger.info (space0[2]+"chan0: {}".format(repr(str( chan0 ))))
+                            self.BATCH.logger.debug(space0[2]+"chan0: {}".format(repr(str( chan0 ))))
                             for timespan0 in timespans0:
                                 tmin0 = timespan0[0]
                                 tmax0 = timespan0[1]
@@ -3104,7 +3540,7 @@ class BatchMNE:
                                     latX  = latX[0] if latX.size > 0 else np.nan
                                     valX  = valX[0] if valX.size > 0 else np.nan
                                     if mode0 == "neg": valX = -valX
-                                    if stupid:
+                                    if force:
                                         chanX,latX,valX = inst1.copy().pick(chan0).get_peak(
                                             ch_type          = "eeg",
                                             tmin             = tmin0,
@@ -3370,7 +3806,6 @@ class BatchMNE:
                     self.BATCH.logger.info(space0[1]+"random states file NOT found...")
                     random_states = [0]
 
-
                 ARGS = dict(
                     n_components       = n_components,
                     # n_components       = 50,
@@ -3384,9 +3819,6 @@ class BatchMNE:
                     random_state       = random_states[0],
                 )
                 for line in str_dict(ARGS,space0[1]+"ARGS",max_level=0,max_len=42,tight=True,).split("\n"): self.BATCH.logger.info(line)
-
-                ## TODO FIXME
-                # run_ica("infomax", fit_params=dict(extended=True))
 
                 time_T0 = time.time()
                 self.data[ica0] = mne.preprocessing.ica.ICA(
@@ -3444,8 +3876,8 @@ class BatchMNE:
 
             def import_components(
                     self,
-                    ica0     = "ica0",
-                    of_suff = "",
+                    ica0_excl0,
+                    suffFig = "",
             ):
                 self.BATCH.logger.info(
                     space0[0]+"RUNNING: {}.{}".format(
@@ -3453,39 +3885,37 @@ class BatchMNE:
                         str(whoami()),
                 ))
                 self.BATCH.logger.info (space0[1]+"importing ICs")
-                self.BATCH.logger.info (space0[1]+"processing: {}".format(repr(str( self    ))))
-                self.BATCH.logger.info (space0[1]+"ica0: {}"      .format(repr(str( ica0    ))))
-                self.BATCH.logger.info (space0[1]+"of_suff: {}"   .format(repr(str( of_suff ))))
+                self.BATCH.logger.info (space0[1]+"processing: {}".format(repr(str( self       ))))
+                self.BATCH.logger.info (space0[1]+"ica0_excl0: {}".format(repr(str( ica0_excl0 ))))
+                self.BATCH.logger.info (space0[1]+"suffFig: {}"   .format(repr(str( suffFig    ))))
 
-                #of_BAD_comps = self.locs.of_BAD_comps.with_suffix(of_suff)
-                of_BAD_comps = pathlib.Path(str(self.locs.of_BAD_comps)+of_suff)
+                of_suff = ""
+                # of_suff = ".".join([of_suff,str(whoami())])
+                of_suff = ".".join([of_suff,ica0_excl0])
+                of_suff = ".".join([of_suff,suffFig] if suffFig else [of_suff])
+                of_suff = ".".join([of_suff,"txt"])
+                of_name = self.locs.of_base.with_suffix(of_suff)
 
                 bad_comps = list()
-                self.BATCH.logger.debug(space0[2]+"looking for of_BAD_comps: {}".format(repr(str(of_BAD_comps))))
-                if os.path.exists(of_BAD_comps):
-                    self.BATCH.logger.info(space0[2]+"found of_BAD_comps file...")
-                    with open(of_BAD_comps) as fh:
-                        for line in fh:
-                            line = line.split('#',1,)[0].strip()
-                            if line:
-                                bad_comps.append(int(line))
+                self.BATCH.logger.debug(space0[2]+"of_name: {}".format(repr(str(of_name))))
+                assert os.path.exists(of_name), "PROBLEM: file {} not found".format(repr(str(of_name)))
+                with open(of_name) as fh:
+                    for line in fh:
+                        line = line.split('#',1,)[0].strip()
+                        if line:
+                            bad_comps.append(int(line))
 
                 self.BATCH.logger.info (space0[2]+"bad_comps: {}".format(repr(str(bad_comps))))
-                if bad_comps:
-                    self.BATCH.logger.info(space0[1]+"adding BAD components informtion to data")
-                    self.data[ica0].exclude = bad_comps
-
-                else:
-                    self.BATCH.logger.info(space0[1]+"no BAD components information was added to data")
+                return bad_comps
 
 
 
 
             def export_components(
                     self,
-                    ica0    = "ica0",
-                    of_suff = "",
-                    default = True,
+                    ica0_excl0,
+                    suffFig   = "",
+                    overwrite = False,
             ):
                 self.BATCH.logger.info(
                     space0[0]+"RUNNING: {}.{}".format(
@@ -3493,40 +3923,34 @@ class BatchMNE:
                         str(whoami()),
                 ))
                 self.BATCH.logger.info (space0[1]+"exporting ICs...")
-                self.BATCH.logger.info (space0[1]+"processing: {}".format(repr(str( self    ))))
-                self.BATCH.logger.info (space0[1]+"ica0: {}"      .format(repr(str( ica0    ))))
-                self.BATCH.logger.info (space0[1]+"of_suff: {}"   .format(repr(str( of_suff ))))
-                self.BATCH.logger.info (space0[1]+"default: {}"   .format(repr(str( default ))))
+                self.BATCH.logger.info (space0[1]+"processing: {}".format(repr(str( self       ))))
+                self.BATCH.logger.info (space0[1]+"ica0_excl0: {}".format(repr(str( ica0_excl0 ))))
+                self.BATCH.logger.info (space0[1]+"suffFig: {}"   .format(repr(str( suffFig    ))))
+                self.BATCH.logger.info (space0[1]+"overwrite: {}" .format(repr(str( overwrite  ))))
 
-                of_BAD_comps0 = self.locs.of_BAD_comps
-                of_BAD_comps1 = pathlib.Path(str(self.locs.of_BAD_comps)+of_suff)
+                of_suff = ""
+                # of_suff = ".".join([of_suff,str(whoami())])
+                of_suff = ".".join([of_suff,ica0_excl0])
+                of_suff = ".".join([of_suff,suffFig] if suffFig else [of_suff])
+                of_suff = ".".join([of_suff,"txt"])
+                of_name = self.locs.of_base.with_suffix(of_suff)
 
-                self.BATCH.logger.info (space0[1]+"TGT of_BAD_comps0: {}"  .format(repr(str( of_BAD_comps0   ))))
-                self.BATCH.logger.info (space0[1]+"TGT of_BAD_comps1: {}"  .format(repr(str( of_BAD_comps1   ))))
+                exclude = dc(self.data[ica0_excl0])
 
-                exclude = dc(self.data[ica0].exclude)
-                if exclude:
-
-                    assert default | bool(of_suff), "PROBLEM: exporting to nowhere?!"
-
-                    if default:
-                        self.BATCH.logger.info (space0[1]+"writing BAD components informtion to file")
-                        self.BATCH.logger.info (space0[1]+"using of_BAD_comps0: {}".format(repr(str( of_BAD_comps0 ))))
-                        with open(of_BAD_comps0, 'w') as fh:
-                            for item in exclude:
-                                fh.write("{} # USER SELECTED BAD IC\n".format(item))
-
-                    if of_suff:
-                        self.BATCH.logger.info (space0[1]+"writing BAD components informtion to file")
-                        self.BATCH.logger.info (space0[1]+"using of_BAD_comps1: {}".format(repr(str( of_BAD_comps1 ))))
-                        with open(of_BAD_comps1, 'w') as fh:
-                            for item in exclude:
-                                fh.write("{} # USER SELECTED BAD IC\n".format(item))
+                self.BATCH.logger.info (space0[2]+"of_name: {}".format(repr(str( of_name ))))
+                self.BATCH.logger.info (space0[2]+"comps: {}"  .format(repr(str( exclude ))))
+                if overwrite or (not os.path.exists(of_name)):
+                    self.BATCH.logger.info (space0[1]+"writing BAD components informtion to file")
+                    with open(of_name, 'w') as fh:
+                        for item in exclude:
+                            fh.write("{} # {} # {}\n".format(item,ica0_excl0,of_suff))
 
                 else:
-                    self.BATCH.logger.info (space0[1]+"NOT writing BAD components informtion to file")
-                    self.BATCH.logger.info (space0[1]+"SKIPPED because no components were selected")
+                    self.BATCH.logger.info (space0[1]+"file exists and overwrite option set to False")
+                    self.BATCH.logger.info (space0[1]+"doing nothing")
 
+
+                            
                 self.BATCH.logger.info (space0[1]+"DONE")
 
 
@@ -3563,7 +3987,11 @@ class BatchMNE:
                 ## TODO FIXME add some logic here (or try+catch)
                 ## for more elegant solution to dir handling
                 # od_name = self.locs.od_path/"ICs"
-                od_name = self.locs.of_base.with_suffix(".ICs")
+                od_suff = ""
+                od_suff = ".".join([od_suff,epochs0])
+                od_suff = ".".join([od_suff,ica0])
+                od_suff = ".".join([od_suff,"ICs"])
+                od_name = self.locs.of_base.with_suffix(od_suff)
 
 
                 os.makedirs(od_name,mode=0o700,exist_ok=True,)
@@ -3592,7 +4020,9 @@ class BatchMNE:
                         if showFig: (fig or plt).show()
                         if saveFig:
                             of_suff = str(self.locs.of_stem)
-                            of_suff = ".".join([of_suff,str(whoami()),epochs0,ica0])
+                            of_suff = ".".join([of_suff,str(whoami())])
+                            of_suff = ".".join([of_suff,epochs0])
+                            of_suff = ".".join([of_suff,ica0])
                             of_suff = ".".join([of_suff,STATUS])
                             of_suff = ".".join([of_suff,"{:03d}".format(ii)])
                             of_suff = ".".join([of_suff,"png"])
@@ -3797,10 +4227,10 @@ class BatchMNE:
 
 
             """
-            epochs0     = "epochs2"
+            epochs0     = "epochs3"
             events0     = "events0"
             meta1       = "meta1"
-            df0_epochs0 = "df0_epochs0"
+            df0_epochs0 = "df0_epochs3"
 
             """
 
@@ -3831,11 +4261,19 @@ class BatchMNE:
                     long_format = True,
                 )
                 df0 = df0.join(
-                    df0["condition"].str.split('/',expand=True).rename(columns={0:"TYPE",1:"STIM"})
+                    df0["condition"].str.split('/',expand=True).rename(
+                        columns={
+                            0:"TYPE",
+                            1:"gend",
+                            2:"wLen",
+                            3:"STIM",
+                            4:"word",
+                        }
+                    )
                 )
                 df0["STIM"] = df0["STIM"].str[1:].astype(int)
 
-                del df0["TYPE"]
+                # del df0["TYPE"]
 
                 if True:
                     df0 = pd.merge(
