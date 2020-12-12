@@ -64,6 +64,8 @@ import logging
 
 import inspect
 
+import uuid
+
 """
 checkup:
 
@@ -227,6 +229,7 @@ class BatchMNE:
         self.setupFile   = setupFile
         self.stimuliFile = stimuliFile
         self.verbose     = verbose
+        self.uuid4       = str(uuid.uuid4())
 
         ## Prepare target directories
         os.makedirs(self.targetDir,mode=0o700,exist_ok=True,)
@@ -333,6 +336,7 @@ class BatchMNE:
         out_str += space1[1]+self.objName+".setupFile   = "+repr(str(self.setupFile  ))
         out_str += space1[1]+self.objName+".stimuliFile = "+repr(str(self.stimuliFile))
         out_str += space1[1]+self.objName+".verbose     = "+str(self.verbose    )
+        out_str += space1[1]+self.objName+".uuid4       = "+str(self.uuid4      )
         out_str += space1[1]+self.objName+".logger      : "+str(self.logger     )
         out_str += space1[1]+self.objName+".inputPaths  : "+"contains {} items".format(len(self.inputPaths))
         out_str += space1[1]+self.objName+".dataBase    : "+"contains {} items".format(len(self.dataBase))
@@ -1157,7 +1161,7 @@ class BatchMNE:
                     exclude = False,
                     showFig = True,
                     saveFig = False,
-                    suffFig = "",
+                    suffStr = "",
                 )
 
                 """
@@ -1315,7 +1319,7 @@ class BatchMNE:
                     chans0     = self.BATCH.dataBase.setup["chans"]["bund1"]["B1"],
                     bunds0     = self.BATCH.dataBase.setup["chans"]["bund0"].items(),
                     timespans0 = list(self.BATCH.dataBase.setup["time"]["spans0"].values()),
-                    force      = False,
+                    crude      = False,
                 )
 
 
@@ -1341,7 +1345,7 @@ class BatchMNE:
                     bunds0      = bunds0,
                     showFig     = showFig,
                     saveFig     = saveFig,
-                    suffFig     = "",
+                    suffStr     = "",
                     colors0     = self.BATCH.dataBase.setup["colors0"]["word_set"],
                     styles0     = self.BATCH.dataBase.setup["styles0"]["word_set"],
                     linestyles0 = self.BATCH.dataBase.setup["linestyles0"]["word_set"],
@@ -1357,7 +1361,7 @@ class BatchMNE:
                     bunds0      = bunds0,
                     showFig     = showFig,
                     saveFig     = saveFig,
-                    suffFig     = "",
+                    suffStr     = "",
                     colors0     = self.BATCH.dataBase.setup["colors0"]["word_len"],
                     styles0     = self.BATCH.dataBase.setup["styles0"]["word_len"],
                     linestyles0 = self.BATCH.dataBase.setup["linestyles0"]["word_len"],
@@ -1376,7 +1380,7 @@ class BatchMNE:
                     interpolate_bads  = True,
                     showFig           = showFig,
                     saveFig           = saveFig,
-                    suffFig           = "",
+                    suffStr           = "",
                 )
                 self.plot_evoked_JOINT(
                     evoked0           = "evoked0",
@@ -1385,7 +1389,7 @@ class BatchMNE:
                     interpolate_bads  = True,
                     showFig           = showFig,
                     saveFig           = saveFig,
-                    suffFig           = "",
+                    suffStr           = "",
                 )
                 if sys.stdout.isatty(): plt.close("all")
 
@@ -1409,7 +1413,7 @@ class BatchMNE:
                     combines = combines,
                     showFig  = showFig,
                     saveFig  = saveFig,
-                    suffFig  = "stg005_before_autorej",
+                    suffStr  = "stg005_before_autorej",
                 )
                 if sys.stdout.isatty(): plt.close("all")
 
@@ -1423,7 +1427,7 @@ class BatchMNE:
                     exclude = False,
                     showFig = showFig,
                     saveFig = saveFig,
-                    suffFig = "stg000_very_raw",
+                    suffStr = "stg000_very_raw",
                 )
                 if sys.stdout.isatty(): plt.close("all")
 
@@ -1506,7 +1510,7 @@ class BatchMNE:
                     epochs0 = "epochs1",
                     showFig = showFig,
                     saveFig = saveFig,
-                    suffFig = "stg006_thresholded_epochs",
+                    suffStr = "stg006_thresholded_epochs",
                 )
                 if sys.stdout.isatty(): plt.close("all")
 
@@ -1519,7 +1523,7 @@ class BatchMNE:
                     chans0     = self.BATCH.dataBase.setup["chans"]["bund1"]["B1"],
                     bunds0     = self.BATCH.dataBase.setup["chans"]["bund0"].items(),
                     timespans0 = list(self.BATCH.dataBase.setup["time"]["spans0"].values()),
-                    force      = False,
+                    crude      = False,
                 )
 
                 """
@@ -1613,14 +1617,14 @@ class BatchMNE:
                     epochs0 = "epochs2",
                     showFig = showFig,
                     saveFig = saveFig,
-                    suffFig = "stg007_autorejected_epochs",
+                    suffStr = "stg007_autorejected_epochs",
                 )
                 self.plot_autorejection_log(
                     epochs0           = "epochs0",
                     epochs0_rej0_log0 = "epochs2_rej0_log0",
                     showFig           = showFig,
                     saveFig           = saveFig,
-                    suffFig           = "stg007_autorejected_epochs",
+                    suffStr           = "stg007_autorejected_epochs",
                 )
                 if sys.stdout.isatty(): plt.close("all")
 
@@ -1633,7 +1637,7 @@ class BatchMNE:
                     chans0     = self.BATCH.dataBase.setup["chans"]["bund1"]["B1"],
                     bunds0     = self.BATCH.dataBase.setup["chans"]["bund0"].items(),
                     timespans0 = list(self.BATCH.dataBase.setup["time"]["spans0"].values()),
-                    force      = False,
+                    crude      = False,
                 )
 
                 """
@@ -1667,7 +1671,7 @@ class BatchMNE:
                     yLimVal = [-80,40],
                     showFig = showFig,
                     saveFig = saveFig,
-                    suffFig = "stg001_reref_to_average",
+                    suffStr = "stg001_reref_to_average",
                 )
 
                 chans1 = ["C3","C4","F3","F4","PO3","PO4","O1","O2",]
@@ -1691,7 +1695,7 @@ class BatchMNE:
                     bunds0      = bunds0,
                     showFig     = showFig,
                     saveFig     = saveFig,
-                    suffFig     = "autorejected", # "thresholded",
+                    suffStr     = "autorejected", # "thresholded",
                     colors0     = self.BATCH.dataBase.setup["colors0"]["word_set"],
                     styles0     = self.BATCH.dataBase.setup["styles0"]["word_set"],
                     linestyles0 = self.BATCH.dataBase.setup["linestyles0"]["word_set"],
@@ -1741,58 +1745,17 @@ class BatchMNE:
                     epochs0 = "epochs3",
                     showFig = showFig,
                     saveFig = saveFig,
-                    suffFig = "stg008_autorejected_epochs",
+                    suffStr = "stg008_autorejected_epochs",
                 )
                 self.plot_autorejection_log(
                     epochs0           = "epochs0",
                     epochs0_rej0_log0 = "epochs3_rej0_log0",
                     showFig           = showFig,
                     saveFig           = saveFig,
-                    suffFig           = "stg008_autorejected_epochs",
+                    suffStr           = "stg008_autorejected_epochs",
                 )
                 if sys.stdout.isatty(): plt.close("all")
 
-                self.construct_evoked_WORD_SET(evoked0="evoked3",epochs0="epochs3")
-                self.construct_evoked_WORD_LEN(evoked0="evoked3",epochs0="epochs3")
-
-                self.extract_PEAKS_from_evoked_to_dataframe(
-                    df0_peaks0 = "df3_peaks3",
-                    evoked0    = "evoked3",
-                    chans0     = self.BATCH.dataBase.setup["chans"]["bund1"]["B1"],
-                    bunds0     = self.BATCH.dataBase.setup["chans"]["bund0"].items(),
-                    timespans0 = list(self.BATCH.dataBase.setup["time"]["spans0"].values()),
-                    force      = False,
-                )
-
-                """
-
-                """
-
-                self.info(0)
-
-                df0 = self.data["df0_peaks0"]
-                df1 = self.data["df1_peaks1"]
-                df2 = self.data["df2_peaks2"]
-                df3 = self.data["df3_peaks3"]
-
-                quest0="word_set"
-                tmin0=0.10
-                chan0="RP"
-                mode0="neg"
-                mode0="pos"
-                print( check_std(df0,df1,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
-                print( check_std(df0,df2,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
-                print( check_std(df0,df3,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
-                print("")
-                tmin0=0.35
-                print( check_std(df0,df1,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
-                print( check_std(df0,df2,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
-                print( check_std(df0,df3,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
-                print("")
-                tmin0=0.60
-                print( check_std(df0,df1,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
-                print( check_std(df0,df2,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
-                print( check_std(df0,df3,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
 
                 """
 
@@ -1831,6 +1794,7 @@ class BatchMNE:
 
                 """
 
+                ## Detect artifacts and inspect components for ALL ICAs
                 temp = OrderedDict()
                 temp["ica0"] = "epochs0"
                 temp["ica1"] = "epochs1"
@@ -1960,17 +1924,17 @@ class BatchMNE:
                 self.data["ica2_excl0"] = self.data["ica2"].exclude
                 self.export_components(
                     ica0_excl0 = "ica2_excl0",
-                    suffFig    = "auto",
+                    suffStr    = "auto",
                     overwrite  = False,
                 )
                 self.export_components(
                     ica0_excl0 = "ica2_excl0",
-                    suffFig    = "user",
+                    suffStr    = "user",
                     overwrite  = False,
                 )
                 self.data["ica2_excl1"] = self.import_components(
                     ica0_excl0 = "ica2_excl0",
-                    suffFig    = "user",
+                    suffStr    = "user",
                 )
 
 
@@ -2015,48 +1979,18 @@ class BatchMNE:
                     chans0     = self.BATCH.dataBase.setup["chans"]["bund1"]["B1"],
                     bunds0     = self.BATCH.dataBase.setup["chans"]["bund0"].items(),
                     timespans0 = list(self.BATCH.dataBase.setup["time"]["spans0"].values()),
-                    force      = False,
+                    crude      = False,
                 )
 
 
                 self.extract_PEAKS_from_evoked_to_dataframe(
-                    df0_peaks0 = "df3_peaks3_force",
+                    df0_peaks0 = "df3_peaks3_crude",
                     evoked0    = "evoked3",
                     chans0     = self.BATCH.dataBase.setup["chans"]["bund1"]["B1"],
                     bunds0     = self.BATCH.dataBase.setup["chans"]["bund0"].items(),
                     timespans0 = list(self.BATCH.dataBase.setup["time"]["spans0"].values()),
-                    force      = False,
+                    crude      = True,
                 )
-
-                """
-
-                self.info(0)
-
-                df0 = self.data["df0_peaks0"]
-                df1 = self.data["df1_peaks1"]
-                df2 = self.data["df2_peaks2"]
-                df3 = self.data["df3_peaks3"]
-
-                quest0="word_set"
-                tmin0=0.10
-                chan0="RP"
-                mode0="neg"
-                mode0="pos"
-                print( check_std(df0,df1,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
-                print( check_std(df0,df2,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
-                print( check_std(df0,df3,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
-                print("")
-                tmin0=0.35
-                print( check_std(df0,df1,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
-                print( check_std(df0,df2,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
-                print( check_std(df0,df3,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
-                print("")
-                tmin0=0.60
-                print( check_std(df0,df1,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
-                print( check_std(df0,df2,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
-                print( check_std(df0,df3,quest0=quest0,tmin0=tmin0,chan0=chan0,mode0=mode0,) )
-
-                """
 
 
                 """
@@ -2121,7 +2055,7 @@ class BatchMNE:
                     yLimVal = [-80,40],
                     showFig = showFig,
                     saveFig = saveFig,
-                    suffFig = "",
+                    suffStr = "",
                 )
                 if sys.stdout.isatty(): plt.close("all")
 
@@ -2135,7 +2069,7 @@ class BatchMNE:
                     bunds0      = bunds0,
                     showFig     = showFig,
                     saveFig     = saveFig,
-                    suffFig     = "postICA", # "thresholded",
+                    suffStr     = "postICA", # "thresholded",
                     colors0     = self.BATCH.dataBase.setup["colors0"]["word_set"],
                     styles0     = self.BATCH.dataBase.setup["styles0"]["word_set"],
                     linestyles0 = self.BATCH.dataBase.setup["linestyles0"]["word_set"],
@@ -2155,7 +2089,7 @@ class BatchMNE:
                     bunds0      = bunds0,
                     showFig     = showFig,
                     saveFig     = saveFig,
-                    suffFig     = "postICA", # "thresholded",
+                    suffStr     = "postICA", # "thresholded",
                     colors0     = self.BATCH.dataBase.setup["colors0"]["word_len"],
                     styles0     = self.BATCH.dataBase.setup["styles0"]["word_len"],
                     linestyles0 = self.BATCH.dataBase.setup["linestyles0"]["word_len"],
@@ -2171,26 +2105,26 @@ class BatchMNE:
                     epochs0 = "epochs1",
                     showFig = showFig,
                     saveFig = saveFig,
-                    suffFig = "",
+                    suffStr = "",
                 )
                 self.plot_epochs_drop_log(
                     epochs0 = "epochs2",
                     showFig = showFig,
                     saveFig = saveFig,
-                    suffFig = "",
+                    suffStr = "",
                 )
                 self.plot_epochs_drop_log(
                     epochs0 = "epochs3",
                     showFig = showFig,
                     saveFig = saveFig,
-                    suffFig = "",
+                    suffStr = "",
                 )
                 self.plot_autorejection_log(
                     epochs0           = "epochs0",
                     epochs0_rej0_log0 = "epochs2_rej0_log0",
                     showFig           = showFig,
                     saveFig           = saveFig,
-                    suffFig           = "",
+                    suffStr           = "",
                 )
 
                 bundles  = dc(self.BATCH.dataBase.setup["chans"]["bund0"])
@@ -2201,7 +2135,7 @@ class BatchMNE:
                     combines = combines,
                     showFig  = showFig,
                     saveFig  = saveFig,
-                    suffFig  = "",
+                    suffStr  = "",
                 )
 
                 self.plot_evoked_JOINT(
@@ -2211,7 +2145,7 @@ class BatchMNE:
                     interpolate_bads  = True,
                     showFig           = showFig,
                     saveFig           = saveFig,
-                    suffFig           = "",
+                    suffStr           = "",
                 )
 
                 self.plot_evoked_JOINT(
@@ -2221,7 +2155,7 @@ class BatchMNE:
                     interpolate_bads  = True,
                     showFig           = showFig,
                     saveFig           = saveFig,
-                    suffFig           = "",
+                    suffStr           = "",
                 )
 
                 if sys.stdout.isatty(): plt.close("all")
@@ -2255,18 +2189,6 @@ class BatchMNE:
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
             def JOB_005(
                     self,
                     ASK     = False,
@@ -2281,46 +2203,6 @@ class BatchMNE:
 
                 """
 
-                temp_continue = "\nPress any (standard) key to continue... "
-
-                self.info()
-                if ASK & sys.stdout.isatty(): input(temp_continue)
-
-                """
-                showFig = True
-                saveFig = False
-
-                loadHKL = True
-
-                data.setup.read()
-                data.setup.info()
-
-                self.info(0)
-
-                """
-
-                if loadHKL:
-                    self.read_hkl()
-
-
-
-
-
-
-
-            def JOB_006(
-                    self,
-                    ASK     = False,
-                    cleanup = False,
-                    showFig = False,
-                    saveFig = True,
-                    loadHKL = True,
-            ):
-                """
-                This JOB
-                - ...
-
-                """
 
                 temp_continue = "\nPress any (standard) key to continue... "
 
@@ -2340,11 +2222,13 @@ class BatchMNE:
 
                 """
 
+                TIME_T0 = time.time()
+
                 if loadHKL:
                     self.read_hkl()
 
                 """
-                ## RANSAC should be run within JOB_003 OR JOB_006 !!!
+                ## TODO CONSIDER if RANSAC should be run within JOB_003 OR JOB_006 !!!
 
                 """
 
@@ -2375,18 +2259,36 @@ class BatchMNE:
                     chans0     = self.BATCH.dataBase.setup["chans"]["bund1"]["B1"],
                     bunds0     = self.BATCH.dataBase.setup["chans"]["bund0"].items(),
                     timespans0 = list(self.BATCH.dataBase.setup["time"]["spans0"].values()),
-                    force      = False,
+                    crude      = False,
                 )
 
 
                 self.extract_PEAKS_from_evoked_to_dataframe(
-                    df0_peaks0 = "df4_peaks4_forced",
+                    df0_peaks0 = "df4_peaks4_crude",
                     evoked0    = "evoked4",
                     chans0     = self.BATCH.dataBase.setup["chans"]["bund1"]["B1"],
                     bunds0     = self.BATCH.dataBase.setup["chans"]["bund0"].items(),
                     timespans0 = list(self.BATCH.dataBase.setup["time"]["spans0"].values()),
-                    force      = False,
+                    crude      = True,
                 )
+
+
+
+                self.write_hkl()
+                self.mark_DONE()
+
+                if cleanup:
+                    self.data = OrderedDict()
+
+
+                TIME_T1 = time.time()
+                TIME_D1 = TIME_T1-TIME_T0
+
+                self.BATCH.logger.info (space0[1]+("="*77))
+                self.BATCH.logger.info (space0[1]+("="*77))
+                self.BATCH.logger.info (space0[1]+"TIME ELAPSED: {}".format( hf.format_timespan( TIME_D1 )) )
+                self.BATCH.logger.info (space0[1]+("="*77))
+                self.BATCH.logger.info (space0[1]+("="*77))
 
 
                 """
@@ -2801,7 +2703,7 @@ class BatchMNE:
                     exclude = False,   # exclude = False,
                     showFig = False,   # showFig = showFig,
                     saveFig = True,    # saveFig = saveFig,
-                    suffFig = "",      # suffFig = "stg000_very_raw",
+                    suffStr = "",      # suffStr = "stg000_very_raw",
             ):
                 self.plot_channels_power_spectral_density(
                     raw0    = raw0,
@@ -2809,7 +2711,7 @@ class BatchMNE:
                     exclude = exclude,
                     showFig = showFig,
                     saveFig = saveFig,
-                    suffFig = suffFig,
+                    suffStr = suffStr,
                 )
                 self.plot_channels_raw_data_timeseries(
                     raw0    = raw0,
@@ -2817,7 +2719,7 @@ class BatchMNE:
                     exclude = exclude,
                     showFig = showFig,
                     saveFig = saveFig,
-                    suffFig = suffFig,
+                    suffStr = suffStr,
                 )
 
 
@@ -2831,7 +2733,7 @@ class BatchMNE:
                     yLimVal = [-80,40],
                     showFig = False,
                     saveFig = True,
-                    suffFig = "",
+                    suffStr = "",
             ):
                 self.BATCH.logger.info(
                     space0[0]+"RUNNING: {}.{}".format(
@@ -2848,8 +2750,8 @@ class BatchMNE:
                 of_suff = ".".join([of_suff,str(whoami()),raw0])
                 of_suff = ".".join([of_suff,"chansAvg" if average else "chansSep"])
                 of_suff = ".".join([of_suff,"exclBAD"  if exclude else "inclBAD" ])
-                # of_suff = ".".join([of_suff,suffFig])
-                of_suff = ".".join([of_suff,suffFig] if suffFig else [of_suff])
+                # of_suff = ".".join([of_suff,suffStr])
+                of_suff = ".".join([of_suff,suffStr] if suffStr else [of_suff])
                 of_suff = ".".join([of_suff,"png"])
 
                 EXCLUDE = self.data[raw0].info["bads"] if exclude else []
@@ -2876,7 +2778,7 @@ class BatchMNE:
                     title_old,
                     self.locs.of_stem,
                     raw0,
-                    suffFig,
+                    suffStr,
                     "chansAvg" if average else "chansSep",
                     "exclBAD"  if exclude else "inclBAD",
                 )
@@ -2898,7 +2800,7 @@ class BatchMNE:
                     exclude = False,
                     showFig = False,
                     saveFig = True,
-                    suffFig = "",
+                    suffStr = "",
             ):
                 self.BATCH.logger.info(
                     space0[0]+"RUNNING: {}.{}".format(
@@ -2915,8 +2817,8 @@ class BatchMNE:
                 of_suff = ".".join([of_suff,str(whoami()),raw0])
                 of_suff = ".".join([of_suff,"fullSig" if total   else "someSig"])
                 of_suff = ".".join([of_suff,"exclBAD" if exclude else "inclBAD"])
-                # of_suff = ".".join([of_suff,suffFig])
-                of_suff = ".".join([of_suff,suffFig] if suffFig else [of_suff])
+                # of_suff = ".".join([of_suff,suffStr])
+                of_suff = ".".join([of_suff,suffStr] if suffStr else [of_suff])
                 of_suff = ".".join([of_suff,"png"])
 
                 EXCLUDE = self.data[raw0].info["bads"]  if exclude else []
@@ -2939,7 +2841,7 @@ class BatchMNE:
                     title_old,
                     self.locs.of_stem,
                     raw0,
-                    suffFig,
+                    suffStr,
                     "fullSig" if total   else "someSig",
                     "exclBAD" if exclude else "inclBAD",
                 )
@@ -3187,7 +3089,7 @@ class BatchMNE:
                     epochs0, # epochs0 = "epochs1",
                     showFig, # showFig = False,
                     saveFig, # saveFig = True,
-                    suffFig, # suffFig = "",
+                    suffStr, # suffStr = "",
             ):
                 self.BATCH.logger.info(
                     space0[0]+"RUNNING: {}.{}".format(
@@ -3217,7 +3119,7 @@ class BatchMNE:
                     of_suff = ""
                     of_suff = ".".join([of_suff,str(whoami()),epochs0])
                     # of_suff = ".".join([of_suff,"0"])
-                    of_suff = ".".join([of_suff,suffFig] if suffFig else [of_suff])
+                    of_suff = ".".join([of_suff,suffStr] if suffStr else [of_suff])
                     of_suff = ".".join([of_suff,"png"])
                     of_name = self.locs.of_base.with_suffix(of_suff)
                     self.BATCH.logger.info (space0[1]+"of_name: {}".format(repr(str( of_name ))))
@@ -3233,7 +3135,7 @@ class BatchMNE:
                     epochs0_rej0_log0, # epochs0_rej0_log0 = "epochs2_rej0_log0",
                     showFig,           # showFig           = False,
                     saveFig,           # saveFig           = True,
-                    suffFig,           # suffFig           = "",
+                    suffStr,           # suffStr           = "",
             ):
                 self.BATCH.logger.info(
                     space0[0]+"RUNNING: {}.{}".format(
@@ -3295,7 +3197,7 @@ class BatchMNE:
                     of_suff = ""
                     of_suff = ".".join([of_suff,str(whoami())])
                     of_suff = ".".join([of_suff,epochs0_rej0_log0])
-                    of_suff = ".".join([of_suff,suffFig] if suffFig else [of_suff])
+                    of_suff = ".".join([of_suff,suffStr] if suffStr else [of_suff])
                     of_suff = ".".join([of_suff,"png"])
                     of_name = self.locs.of_base.with_suffix(of_suff)
                     self.BATCH.logger.info (space0[1]+"of_name: {}".format(repr(str(of_name))))
@@ -3312,7 +3214,7 @@ class BatchMNE:
                     combines,        # combines = ["mean",] # OR ["gfp","mean",],
                     showFig = False, # showFig  = showFig,
                     saveFig = True,  # saveFig  = saveFig,
-                    suffFig = "",    # suffFig  = "stg005_before_autorej",
+                    suffStr = "",    # suffStr  = "stg005_before_autorej",
             ):
                 self.BATCH.logger.info(
                     space0[0]+"RUNNING: {}.{}".format(
@@ -3327,13 +3229,13 @@ class BatchMNE:
 
                 elec_idx = OrderedDict()
 
-                for key,val in bundles.items():
-                    elec_idx[key] = mne.pick_types(
+                for key0,val0 in bundles.items():
+                    elec_idx[key0] = mne.pick_types(
                         self.data[epochs0].info,
                         meg       = False,
                         eeg       = True,
                         exclude   = [],
-                        selection = val,
+                        selection = val0,
                     )
 
                 for jj,combine in enumerate(combines):
@@ -3349,7 +3251,7 @@ class BatchMNE:
                         title_new = "{}\n{} ({}) {}".format(
                             self.locs.of_stem,
                             epochs0,
-                            suffFig,
+                            suffStr,
                             title_old,
                         )
                         fig.axes[0].set(title=title_new)
@@ -3363,7 +3265,7 @@ class BatchMNE:
                             of_suff = ".".join([of_suff,"{:03d}".format(ii)])
                             of_suff = ".".join([of_suff,str(title_bndl)])
                             of_suff = ".".join([of_suff,epochs0])
-                            of_suff = ".".join([of_suff,suffFig] if suffFig else [of_suff])
+                            of_suff = ".".join([of_suff,suffStr] if suffStr else [of_suff])
                             of_suff = ".".join([of_suff,"png"])
                             of_name = self.locs.of_base.with_suffix(of_suff)
                             self.BATCH.logger.info (space0[1]+"of_name: {}".format(repr(str( of_name ))))
@@ -3429,7 +3331,7 @@ class BatchMNE:
                     chans0,         # chans0     = self.BATCH.dataBase.setup["chans"]["bund1"]["B1"],
                     bunds0,         # bunds0     = self.BATCH.dataBase.setup["chans"]["bund0"].items(),
                     timespans0,     # timespans0 = list(self.BATCH.dataBase.setup["time"]["spans0"].values()),
-                    force = False, # force     = False,
+                    crude = False, # crude     = False,
             ):
                 self.BATCH.logger.info(
                     space0[0]+"RUNNING: {}.{}".format(
@@ -3478,14 +3380,18 @@ class BatchMNE:
                                     latX  = latX[0] if latX.size > 0 else np.nan
                                     valX  = valX[0] if valX.size > 0 else np.nan
                                     if mode0 == "neg": valX = -valX
-                                    if force:
-                                        chanX,latX,valX = val0.copy().pick(chan0).get_peak(
-                                            ch_type          = "eeg",
-                                            tmin             = tmin0,
-                                            tmax             = tmax0,
-                                            mode             = mode0,
-                                            return_amplitude = True,
-                                        )
+                                    if crude:
+                                        try:
+                                            chanX,latX,valX = val0.copy().pick(chan0).get_peak(
+                                                ch_type          = "eeg",
+                                                tmin             = tmin0,
+                                                tmax             = tmax0,
+                                                mode             = mode0,
+                                                return_amplitude = True,
+                                            )
+                                        except ValueError:
+                                            self.BATCH.logger.warning(space0[1]+"*** WARNING *** handling ValueError for {}".format(repr(str( chan0 ))))
+                                            chanX,latX,valX = chan0,np.nan,np.nan
 
                                     df1 = pd.DataFrame(
                                         [[evoked0,quest0,cond0,chan0,tmin0,tmax0,mode0,chanX,latX,valX]],
@@ -3540,14 +3446,18 @@ class BatchMNE:
                                     latX  = latX[0] if latX.size > 0 else np.nan
                                     valX  = valX[0] if valX.size > 0 else np.nan
                                     if mode0 == "neg": valX = -valX
-                                    if force:
-                                        chanX,latX,valX = inst1.copy().pick(chan0).get_peak(
-                                            ch_type          = "eeg",
-                                            tmin             = tmin0,
-                                            tmax             = tmax0,
-                                            mode             = mode0,
-                                            return_amplitude = True,
-                                        )
+                                    if crude:
+                                        try:
+                                            chanX,latX,valX = inst1.copy().pick(chan0).get_peak(
+                                                ch_type          = "eeg",
+                                                tmin             = tmin0,
+                                                tmax             = tmax0,
+                                                mode             = mode0,
+                                                return_amplitude = True,
+                                            )
+                                        except ValueError:
+                                            self.BATCH.logger.warning(space0[1]+"*** WARNING *** handling ValueError for {}".format(repr(str( chan0 ))))
+                                            chanX,latX,valX = chan0,np.nan,np.nan
 
                                     df1 = pd.DataFrame(
                                         [[evoked0,quest0,cond0,chan0,tmin0,tmax0,mode0,chanX,latX,valX]],
@@ -3581,7 +3491,7 @@ class BatchMNE:
                     interpolate_bads  = True,  # interpolate_bads  = True,
                     showFig           = False, # showFig           = False,
                     saveFig           = True,  # saveFig           = True,
-                    suffFig           = "",    # suffFig           = "",
+                    suffStr           = "",    # suffStr           = "",
             ):
                 self.BATCH.logger.info(
                     space0[0]+"RUNNING: {}.{}".format(
@@ -3617,7 +3527,7 @@ class BatchMNE:
 
                     fig = evoked.plot_joint(
                         show    = False,
-                        title   = title + "\n{} {} ({})".format(key,evoked0,suffFig),
+                        title   = title + "\n{} {} ({})".format(key,evoked0,suffStr),
                         times   = times,
                         ts_args = dict(
                             time_unit      = "s",
@@ -3639,7 +3549,7 @@ class BatchMNE:
                         of_suff = ".".join([of_suff,"{:03d}".format(ii)])
                         of_suff = ".".join([of_suff,str(key)])
                         of_suff = ".".join([of_suff,evoked0])
-                        of_suff = ".".join([of_suff,suffFig] if suffFig else [of_suff])
+                        of_suff = ".".join([of_suff,suffStr] if suffStr else [of_suff])
                         of_suff = ".".join([of_suff,"png"])
                         of_name = self.locs.of_base.with_suffix(of_suff)
                         self.BATCH.logger.info (space0[1]+"of_name: {}".format(repr(str( of_name ))))
@@ -3656,7 +3566,7 @@ class BatchMNE:
                     bunds0      = None,  # bunds0      = self.BATCH.dataBase.setup["chans"]["bund0"],
                     showFig     = False, # showFig     = False,
                     saveFig     = True,  # saveFig     = True,
-                    suffFig     = "",    # suffFig     = "",
+                    suffStr     = "",    # suffStr     = "",
                     colors0     = None,  # colors0     = self.BATCH.dataBase.setup["colors0"]["word_set"],
                     styles0     = None,  # styles0     = self.BATCH.dataBase.setup["styles0"]["word_set"],
                     linestyles0 = None,  # linestyles0 = self.BATCH.dataBase.setup["linestyles0"]["word_set"],
@@ -3682,10 +3592,11 @@ class BatchMNE:
                 picks0 = OrderedDict()
                 if (chans0 is not None):
                     for chan0      in chans0:         picks0[chan0] = chan0
+
                 if (bunds0 is not None):
                     for key0,bund0 in bunds0.items(): picks0[key0] = bund0
 
-                assert 0 < len(picks0), "PROBLEM: chans0 OR bunds0 should not be empty"
+                assert 0 < len(picks0), "PROBLEM: chans0 OR bunds0 should be non-empty"
 
                 combine  = "gfp"
                 combine  = "mean"
@@ -3765,7 +3676,7 @@ class BatchMNE:
                         # of_suff = ".".join([of_suff,str(pick0) if isinstance(pick0, str) else "+".join(pick0) ])
                         of_suff = ".".join([of_suff,str(key0)])
                         of_suff = ".".join([of_suff,evoked0])
-                        of_suff = ".".join([of_suff,suffFig] if suffFig else [of_suff])
+                        of_suff = ".".join([of_suff,suffStr] if suffStr else [of_suff])
                         of_suff = ".".join([of_suff,"png"])
                         of_name = self.locs.of_base.with_suffix(of_suff)
                         self.BATCH.logger.info (space0[1]+"of_name: {}".format(repr(str( of_name ))))
@@ -3877,7 +3788,7 @@ class BatchMNE:
             def import_components(
                     self,
                     ica0_excl0,
-                    suffFig = "",
+                    suffStr = "",
             ):
                 self.BATCH.logger.info(
                     space0[0]+"RUNNING: {}.{}".format(
@@ -3887,12 +3798,12 @@ class BatchMNE:
                 self.BATCH.logger.info (space0[1]+"importing ICs")
                 self.BATCH.logger.info (space0[1]+"processing: {}".format(repr(str( self       ))))
                 self.BATCH.logger.info (space0[1]+"ica0_excl0: {}".format(repr(str( ica0_excl0 ))))
-                self.BATCH.logger.info (space0[1]+"suffFig: {}"   .format(repr(str( suffFig    ))))
+                self.BATCH.logger.info (space0[1]+"suffStr: {}"   .format(repr(str( suffStr    ))))
 
                 of_suff = ""
                 # of_suff = ".".join([of_suff,str(whoami())])
                 of_suff = ".".join([of_suff,ica0_excl0])
-                of_suff = ".".join([of_suff,suffFig] if suffFig else [of_suff])
+                of_suff = ".".join([of_suff,suffStr] if suffStr else [of_suff])
                 of_suff = ".".join([of_suff,"txt"])
                 of_name = self.locs.of_base.with_suffix(of_suff)
 
@@ -3914,7 +3825,7 @@ class BatchMNE:
             def export_components(
                     self,
                     ica0_excl0,
-                    suffFig   = "",
+                    suffStr   = "",
                     overwrite = False,
             ):
                 self.BATCH.logger.info(
@@ -3925,13 +3836,13 @@ class BatchMNE:
                 self.BATCH.logger.info (space0[1]+"exporting ICs...")
                 self.BATCH.logger.info (space0[1]+"processing: {}".format(repr(str( self       ))))
                 self.BATCH.logger.info (space0[1]+"ica0_excl0: {}".format(repr(str( ica0_excl0 ))))
-                self.BATCH.logger.info (space0[1]+"suffFig: {}"   .format(repr(str( suffFig    ))))
+                self.BATCH.logger.info (space0[1]+"suffStr: {}"   .format(repr(str( suffStr    ))))
                 self.BATCH.logger.info (space0[1]+"overwrite: {}" .format(repr(str( overwrite  ))))
 
                 of_suff = ""
                 # of_suff = ".".join([of_suff,str(whoami())])
                 of_suff = ".".join([of_suff,ica0_excl0])
-                of_suff = ".".join([of_suff,suffFig] if suffFig else [of_suff])
+                of_suff = ".".join([of_suff,suffStr] if suffStr else [of_suff])
                 of_suff = ".".join([of_suff,"txt"])
                 of_name = self.locs.of_base.with_suffix(of_suff)
 
@@ -4090,6 +4001,8 @@ class BatchMNE:
 
             def write_hkl(
                     self,
+                    suffStr   = "",
+                    overwrite = False,
             ):
                 self.BATCH.logger.info(
                     space0[0]+"RUNNING: {}.{}".format(
@@ -4097,18 +4010,38 @@ class BatchMNE:
                         str(whoami()),
                 ))
                 self.BATCH.logger.info (space0[1]+"exporting dataset as hickle")
-                self.BATCH.logger.info (space0[1]+"processing: " + repr(str(self)))
-                # self.of_data = self.of_base.with_suffix(".gzip.hkl")
-                # self.of_data
-                # self.of_base.with_suffix(".gzip.hkl")
-                hkl.dump(
-                    self.data,
-                    self.locs.of_data,
-                    mode="w",
-                    compression="gzip",
-                )
+                self.BATCH.logger.info (space0[1]+"processing: {}".format(repr(str(self))))
+                self.BATCH.logger.info (space0[1]+"suffStr: {}".format(repr(str(suffStr))))
+                of_suff = ""
+                of_suff = ".".join([of_suff,suffStr] if suffStr else [of_suff])
+                of_suff = ".".join([of_suff,"gzip.hkl"])
+                of_name = self.locs.of_base.with_suffix(of_suff)
+                if overwrite or (not os.path.exists(of_name)):
+                    hkl.dump(
+                        self.data,
+                        of_name,
+                        mode="w",
+                        compression="gzip",
+                    )
+                else:
+                    self.BATCH.logger.warning(space0[1]+"adding UUID to filename to avoid overwriting of the output file ")
+                    of_suff = ""
+                    of_suff = ".".join([of_suff,suffStr] if suffStr else [of_suff])
+                    of_suff = ".".join([of_suff,self.BATCH.uuid4])
+                    of_suff = ".".join([of_suff,"gzip.hkl"])
+                    of_name = self.locs.of_base.with_suffix(of_suff)
+                    assert overwrite or (not os.path.exists(of_name)), "PROBLEM: tried not to overwrite HKL output (as perscribed) but failed badly because the target file exists"
+                    hkl.dump(
+                        self.data,
+                        of_name,
+                        mode="w",
+                        compression="gzip",
+                    )
+
+                self.BATCH.logger.info (space0[1]+"saved: {}".format(repr(str(of_name))))
 
 
+                
 
 
             def write_data(
