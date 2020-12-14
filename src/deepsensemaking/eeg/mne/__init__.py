@@ -1832,6 +1832,7 @@ class BatchMNE:
                         rejected = True,
                         showFig  = showFig,
                         saveFig  = saveFig,
+                        suffStr  = "",
                     )
                     if sys.stdout.isatty(): plt.close("all")
 
@@ -2079,7 +2080,6 @@ class BatchMNE:
                     df0_peaks0  = "df3_peaks3",
                 )
                 if sys.stdout.isatty(): plt.close("all")
-
 
                 if sys.stdout.isatty(): plt.close("all")
                 self.plot_evoked_COMPARE(
@@ -3874,6 +3874,7 @@ class BatchMNE:
                     rejected = True,
                     showFig  = False,
                     saveFig  = True,
+                    suffStr  = "",    # suffStr     = "",
             ):
                 self.BATCH.logger.info(
                     space0[0]+"RUNNING: {}.{}".format(
@@ -3902,6 +3903,7 @@ class BatchMNE:
                 od_suff = ".".join([od_suff,epochs0])
                 od_suff = ".".join([od_suff,ica0])
                 od_suff = ".".join([od_suff,"ICs"])
+                od_suff = ".".join([od_suff,suffStr] if suffStr else [od_suff])
                 od_name = self.locs.of_base.with_suffix(od_suff)
 
 
