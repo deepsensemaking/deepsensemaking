@@ -110,6 +110,7 @@ def str_dict(in_dict,name="in_dict",max_level=None,disp_vals="some",disp_types="
                 val_str = " # DF"
                 if disp_vals == "all":
                     val_str = " # DF\n" + val.__repr__()
+
             elif isinstance(val, (dt.date,dt.time,dt.datetime,) ):
                 val_str = " # " + val.__repr__().replace(", ", ",")
             else:
@@ -126,9 +127,11 @@ def str_dict(in_dict,name="in_dict",max_level=None,disp_vals="some",disp_types="
             # ADD LEN
             if isinstance(val, (list,tuple,set,) ):
                 val_str += " # len: " + str(len(val))
+
         if disp_types == "some":
             if not isinstance(val,(types.FunctionType,types.BuiltinFunctionType,functools.partial,list,tuple,set,str,int,float,)):
                 type_str = " # <" + str(type(val).__name__) + ">"
+
         elif disp_types == "all":
             if not isinstance(val,(types.FunctionType,types.BuiltinFunctionType,functools.partial,)):
                 type_str += " # <" + str(type(val).__name__) + ">"

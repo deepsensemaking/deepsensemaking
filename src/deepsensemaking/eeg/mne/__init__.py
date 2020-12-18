@@ -121,18 +121,40 @@ from autoreject.utils import interpolate_bads  # noqa
 
 
 
+from contextlib import ExitStack
+mgrs = [
+    pd.option_context("display.max_columns"  ,   45),
+    pd.option_context("display.max_colwidth" ,   80),
+    pd.option_context("display.width"        ,  800),
+    pd.option_context("display.max_rows"     ,   45),
+    pd.option_context("display.min_rows"     ,   45),
+]
+
+with ExitStack() as stack:
+    [stack.enter_context(mgr) for mgr in mgrs]
+    # print( pd.get_option("display.max_rows") )
+
+
+
 # inspect.currentframe().f_back.f_code
 
 
 def whoami():
+    """
+    Example usage
+
+      def foo():
+          print(whoami())
+
+      foo()
+
+    """
+
     # frame = inspect.currentframe()
     # frame = inspect.currentframe().f_back.f_code
     frame = inspect.currentframe().f_back
     return inspect.getframeinfo(frame).function
 
-
-def foo():
-    print(whoami())
 
 
 def get_int_input(prompt,valmin,valmax):
