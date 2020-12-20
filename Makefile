@@ -3,7 +3,7 @@ TARGET="deepsensemaking"
 help:
 	@cat Makefile
 
-all: clean build install
+all: clean build install import-test
 
 clean:
 	@rm -fvR build
@@ -18,7 +18,12 @@ build:
 install:
 	@pip install .
 
-public:
+import-test:
+	echo "RUNNING dsm IMPORT TEST"
+	python -c "import deepsensemaking as dsm"
+
+
+public: all
 	@python3 -m twine upload dist/*.whl
 
 ## on buka2 use:
