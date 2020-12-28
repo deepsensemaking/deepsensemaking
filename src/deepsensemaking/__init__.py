@@ -17,6 +17,8 @@ from deepsensemaking import strings
 from deepsensemaking import within
 from deepsensemaking import eeg
 from deepsensemaking import ml
+from deepsensemaking import pd
+from deepsensemaking import temp
 
 
 from deepsensemaking.base import set_cwd, outside_emacs
