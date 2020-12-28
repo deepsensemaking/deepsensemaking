@@ -7,6 +7,43 @@ import logging
 import inspect
 import pathlib
 
+
+import time
+import datetime as dt
+from pytz import timezone as tz
+loc_tz = tz("Europe/Berlin")
+import humanfriendly as hf
+import tempfile
+
+"""
+
+time_t0 = time.time()
+time.sleep(0.2)
+time_t1 = time.time()
+time_d1 = time_t1-time_t0
+
+# print("Time Elapsed: {}".format(hf.format_timespan( time_d1 )))
+
+
+# print()
+
+
+
+
+
+"""
+
+def dt_now():
+    """
+    Sample usage:
+      from deepsensemaking.base import dt_now
+      print("{}".format(dt_now()))
+
+    """
+    return str(dt.datetime.now(loc_tz).strftime("%Y%m%d-%H%M%S-%f")[:-3])
+
+
+
 logger = logging.getLogger(__name__)
 
 logger.setLevel(logging.WARNING)
