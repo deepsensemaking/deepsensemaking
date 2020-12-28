@@ -22,7 +22,7 @@ import json
 import sys
 
 from tqdm.autonotebook import tqdm
-tqdm.pandas()
+# tqdm.pandas()
 
 
 def convert_ZZ_translators(ifSetup="peaks/data/setup.json",verbose=3,):
