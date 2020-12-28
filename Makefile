@@ -19,8 +19,7 @@ install:
 	@pip install .
 
 import-test:
-	echo "RUNNING dsm IMPORT TEST"
-	python -c "import deepsensemaking as dsm"
+	python -c "import deepsensemaking as dsm; print(dsm.__version__)"
 
 
 public: all
