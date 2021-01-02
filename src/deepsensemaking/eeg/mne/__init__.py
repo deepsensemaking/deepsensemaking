@@ -216,7 +216,7 @@ class BatchMNE:
     """
 
     def __init__(
-self,
+            self,
             objName     = "DS",
             sourceDir   = "rawdata",
             targetDir   = "derivatives",
