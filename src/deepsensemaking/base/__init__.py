@@ -35,7 +35,8 @@ time_d1 = time_t1-time_t0
 
 def dt_now():
     """
-    Sample usage:
+    Example usage:
+    ==============
       from deepsensemaking.base import dt_now
       print("{}".format(dt_now()))
 
@@ -138,3 +139,35 @@ def outside_emacs(var_name="EMACS_BUFFER_DIR"):
     else:
         logger.debug("outside_emacs = True")
         return True
+
+
+def cont_pd(
+        max_columns  =  45,
+        max_colwidth =  80,
+        width        = 800,
+        max_rows     =  45,
+        min_rows     =  45,
+):
+    """
+    Example use:
+      import pandas as pd
+      from contextlib import ExitStack
+      import deepsensemaking as dsm
+
+      with ExitStack() as stack:
+        [stack.enter_context(cont) for cont in dsm.base.cont_pd()]
+        print( pd.get_option("display.max_rows") )
+        # display(df2)
+
+"""
+
+    return [
+        pd.option_context("display.max_columns"  , max_columns  ),
+        pd.option_context("display.max_colwidth" , max_colwidth ),
+        pd.option_context("display.width"        , width        ),
+        pd.option_context("display.max_rows"     , max_rows     ),
+        pd.option_context("display.min_rows"     , min_rows     ),
+    ]
+
+
+
